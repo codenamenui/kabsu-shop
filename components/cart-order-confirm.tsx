@@ -1,13 +1,14 @@
 "use client";
 
 import { CartOrder } from "@/constants/type";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { useEffect, useState } from "react";
 import { createClient } from "@/supabase/clients/createClient";
+import { CreditCard, Wallet } from "lucide-react";
 
 const CartOrderConfirmCard = ({
   order,
@@ -60,99 +61,106 @@ const CartOrderConfirmCard = ({
   };
 
   return (
-    <div>
-      <DialogHeader>
-        <div className="flex gap-4">
-          <div>
-            <Image
-              src={merch.merchandise_pictures[0].picture_url}
-              alt={merch.name}
-              width={150}
-              height={150}
-              className="rounded-lg"
-            />
-          </div>
-          <div className="space-y-2">
-            <p className="text-lg font-bold">{merch.name}</p>
-            <p>
-              <span className="font-semibold">{merch.variant_name}:</span>{" "}
-              {merch.variants[selectedVariant].name}
-            </p>
-            <p>
-              <span className="font-semibold">Quantity:</span> {order.quantity}
-            </p>
-            <p>
-              <span className="font-semibold">Price: </span>
-              {getPrice(membership)}
-            </p>
-          </div>
-        </div>
-        <p>
-          <span className="font-semibold">Pick up at:</span>{" "}
-          {merch.receiving_information}
-        </p>
-
-        <div className="flex flex-col space-y-2">
-          {merch.physical_payment && (
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                name={`payment-${order.id}`}
-                value="irl"
-                checked={paymentOption === "irl"}
-                onChange={() => {
-                  setPaymentOption("irl");
-                  paymentUpdate(order.id.toString(), "irl", paymentReceipt);
-                }}
-                className="mr-2"
-              />
-              <span>In-Person Payment</span>
-            </label>
-          )}
-
-          {merch.online_payment && (
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                name={`payment-${order.id}`}
-                value="online"
-                checked={paymentOption === "online"}
-                onChange={() => {
-                  setPaymentOption("online");
-                  paymentUpdate(order.id.toString(), "online", paymentReceipt);
-                }}
-                className="mr-2"
-              />
-              <span>GCash Payment</span>
-            </label>
-          )}
-
-          {paymentOption === "online" && (
-            <div className="space-y-2">
-              <Label
-                htmlFor={`gcash-receipt-${order.id}`}
-                className="font-semibold"
-              >
-                GCash Receipt
-              </Label>
-              <Input
-                id={`gcash-receipt-${order.id}`}
-                type="file"
-                onChange={(e) => {
-                  setPaymentReceipt(e.target.files?.[0] || null);
-                  paymentUpdate(
-                    order.id.toString(),
-                    paymentOption,
-                    e.target.files?.[0],
-                  );
-                }}
-                accept="image/*"
-                required
+    <div className="space-y-6">
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex gap-4">
+            <div className="relative h-32 w-32">
+              <Image
+                src={merch.merchandise_pictures[0].picture_url}
+                alt={merch.name}
+                fill
+                className="rounded-lg object-cover"
               />
             </div>
-          )}
+            <div className="flex-1 space-y-2">
+              <h3 className="text-lg font-bold">{merch.name}</h3>
+              <div className="text-sm text-gray-600">
+                <p>
+                  {merch.variant_name}: {merch.variants[selectedVariant].name}
+                </p>
+                <p>Quantity: {order.quantity}</p>
+              </div>
+              <p className="text-xl font-bold">{getPrice(membership)}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="space-y-4">
+        <div className="rounded-lg bg-gray-50 p-4">
+          <p className="mb-2 font-medium">Pickup Location</p>
+          <p className="text-sm text-gray-600">{merch.receiving_information}</p>
         </div>
-      </DialogHeader>
+
+        <div>
+          <p className="mb-3 font-medium">Payment Method</p>
+          <div className="space-y-3">
+            {merch.physical_payment && (
+              <label className="flex cursor-pointer items-center rounded-lg border p-3 hover:bg-gray-50">
+                <input
+                  type="radio"
+                  name={`payment-${order.id}`}
+                  value="irl"
+                  checked={paymentOption === "irl"}
+                  onChange={() => {
+                    setPaymentOption("irl");
+                    paymentUpdate(order.id.toString(), "irl", paymentReceipt);
+                  }}
+                  className="mr-3"
+                />
+                <Wallet className="mr-2 h-5 w-5" />
+                <span>In-Person Payment</span>
+              </label>
+            )}
+
+            {merch.online_payment && (
+              <label className="flex cursor-pointer items-center rounded-lg border p-3 hover:bg-gray-50">
+                <input
+                  type="radio"
+                  name={`payment-${order.id}`}
+                  value="online"
+                  checked={paymentOption === "online"}
+                  onChange={() => {
+                    setPaymentOption("online");
+                    paymentUpdate(
+                      order.id.toString(),
+                      "online",
+                      paymentReceipt,
+                    );
+                  }}
+                  className="mr-3"
+                />
+                <CreditCard className="mr-2 h-5 w-5" />
+                <span>GCash Payment</span>
+              </label>
+            )}
+          </div>
+        </div>
+
+        {paymentOption === "online" && (
+          <div className="space-y-2">
+            <Label htmlFor={`gcash-receipt-${order.id}`}>
+              Upload GCash Receipt
+            </Label>
+            <Input
+              id={`gcash-receipt-${order.id}`}
+              type="file"
+              onChange={(e) => {
+                setPaymentReceipt(e.target.files?.[0] || null);
+                paymentUpdate(
+                  order.id.toString(),
+                  paymentOption,
+                  e.target.files?.[0],
+                );
+              }}
+              accept="image/*"
+              className="cursor-pointer"
+              required
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 };
