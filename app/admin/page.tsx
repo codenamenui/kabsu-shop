@@ -25,7 +25,7 @@ const AdminDashboard = () => {
     {
       icon: <LayoutDashboard className="h-10 w-10 text-orange-600" />,
       title: "Categories",
-      path: "/admin/category",
+      path: "/admin/categories",
       description: "Organize and manage content categories",
     },
   ];

@@ -4,8 +4,19 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/supabase/clients/createClient";
 import { toast } from "sonner";
+import { BadgeCheck, BookOpen } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-// Type definitions for form data and validation
 interface ProgramFormData {
   name: string;
   collegeId: string;
@@ -118,74 +129,76 @@ const AddProgramPage: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="mb-6 text-center text-3xl font-bold">Add New Program</h1>
-
-      <form
-        onSubmit={handleSubmit}
-        className="mx-auto mb-4 max-w-lg rounded bg-white px-8 pb-8 pt-6 shadow-md"
-      >
-        <div className="mb-4">
-          <label
-            htmlFor="name"
-            className="mb-2 block text-sm font-bold text-gray-700"
-          >
-            Program Name
-          </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleInputChange}
-            className="focus:shadow-outline w-full appearance-none rounded border px-3 py-2 leading-tight text-gray-700 shadow focus:outline-none"
-            placeholder="Enter full program name"
-            required
-            maxLength={100} // Match database column length
-          />
+    <div className="p-5">
+      <div className="mx-auto max-w-3xl space-y-6">
+        <div className="flex items-center space-x-2">
+          <BadgeCheck className="h-5 w-5 text-primary" />
+          <CardTitle className="text-2xl">Add New Program</CardTitle>
         </div>
+        <p className="text-sm text-muted-foreground">
+          Create a new academic program by filling out the details below
+        </p>
 
-        <div className="mb-4">
-          <label
-            htmlFor="collegeId"
-            className="mb-2 block text-sm font-bold text-gray-700"
-          >
-            College
-          </label>
-          <select
-            id="collegeId"
-            name="collegeId"
-            value={formData.collegeId}
-            onChange={handleInputChange}
-            className="focus:shadow-outline w-full appearance-none rounded border px-3 py-2 leading-tight text-gray-700 shadow focus:outline-none"
-            required
-          >
-            <option value="">Select a College</option>
-            {colleges.map((college) => (
-              <option key={college.id} value={college.id}>
-                {college.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="name">Program Name</Label>
+                <Input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="Enter full program name"
+                  required
+                  maxLength={100}
+                />
+              </div>
 
-        <div className="flex items-center justify-between">
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="focus:shadow-outline rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700 focus:outline-none disabled:opacity-50"
-          >
-            {isLoading ? "Adding..." : "Add Program"}
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push("/admin")}
-            className="focus:shadow-outline rounded px-4 py-2 font-bold text-gray-500 hover:text-gray-700 focus:outline-none"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
+              <div className="space-y-2">
+                <Label htmlFor="collegeId">College</Label>
+                <Select
+                  name="collegeId"
+                  value={formData.collegeId}
+                  onValueChange={(value) =>
+                    handleInputChange({
+                      target: { name: "collegeId", value },
+                    } as any)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a College" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {colleges.map((college) => (
+                      <SelectItem
+                        key={college.id}
+                        value={college.id.toString()}
+                      >
+                        {college.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center justify-end space-x-4">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => router.push("/admin")}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? "Adding..." : "Add Program"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

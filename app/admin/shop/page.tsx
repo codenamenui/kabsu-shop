@@ -4,8 +4,19 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/supabase/clients/createClient";
 import { toast } from "sonner";
+import { BadgeCheck, Building2, Upload } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-// Type definitions for form data and validation
 interface ShopFormData {
   name: string;
   acronym: string;
@@ -184,157 +195,151 @@ const AddShopPage: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="mb-6 text-center text-3xl font-bold">Add New Shop</h1>
-
-      <form
-        onSubmit={handleSubmit}
-        className="mx-auto mb-4 max-w-lg rounded bg-white px-8 pb-8 pt-6 shadow-md"
-      >
-        <div className="mb-4">
-          <label
-            htmlFor="name"
-            className="mb-2 block text-sm font-bold text-gray-700"
-          >
-            Shop Name
-          </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleInputChange}
-            className="focus:shadow-outline w-full appearance-none rounded border px-3 py-2 leading-tight text-gray-700 shadow focus:outline-none"
-            placeholder="Enter shop name"
-            required
-          />
+    <div className="p-5">
+      <div className="mx-auto max-w-3xl space-y-6">
+        <div className="flex items-center space-x-2">
+          <BadgeCheck className="h-5 w-5 text-primary" />
+          <CardTitle className="text-2xl">Add New Shop</CardTitle>
         </div>
+        <p className="text-sm text-muted-foreground">
+          Create a new shop by filling out the details below
+        </p>
 
-        <div className="mb-4">
-          <label
-            htmlFor="acronym"
-            className="mb-2 block text-sm font-bold text-gray-700"
-          >
-            Shop Acronym
-          </label>
-          <input
-            type="text"
-            id="acronym"
-            name="acronym"
-            value={formData.acronym}
-            onChange={handleInputChange}
-            className="focus:shadow-outline w-full appearance-none rounded border px-3 py-2 leading-tight text-gray-700 shadow focus:outline-none"
-            placeholder="Enter shop acronym"
-            required
-          />
-        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Shop Name</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Enter shop name"
+                    required
+                  />
+                </div>
 
-        <div className="mb-4">
-          <label
-            htmlFor="email"
-            className="mb-2 block text-sm font-bold text-gray-700"
-          >
-            Contact Email
-          </label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleInputChange}
-            className="focus:shadow-outline w-full appearance-none rounded border px-3 py-2 leading-tight text-gray-700 shadow focus:outline-none"
-            placeholder="Enter contact email"
-            required
-          />
-        </div>
+                <div className="space-y-2">
+                  <Label htmlFor="acronym">Shop Acronym</Label>
+                  <Input
+                    id="acronym"
+                    name="acronym"
+                    value={formData.acronym}
+                    onChange={handleInputChange}
+                    placeholder="Enter shop acronym"
+                    required
+                  />
+                </div>
+              </div>
 
-        <div className="mb-4">
-          <label
-            htmlFor="collegeId"
-            className="mb-2 block text-sm font-bold text-gray-700"
-          >
-            College
-          </label>
-          <select
-            id="collegeId"
-            name="collegeId"
-            value={formData.collegeId}
-            onChange={handleInputChange}
-            className="focus:shadow-outline w-full appearance-none rounded border px-3 py-2 leading-tight text-gray-700 shadow focus:outline-none"
-            required
-          >
-            <option value="">Select a College</option>
-            {colleges.map((college) => (
-              <option key={college.id} value={college.id}>
-                {college.name}
-              </option>
-            ))}
-          </select>
-        </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Contact Email</Label>
+                <Input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder="Enter contact email"
+                  required
+                />
+              </div>
 
-        <div className="mb-4">
-          <label
-            htmlFor="socmedUrl"
-            className="mb-2 block text-sm font-bold text-gray-700"
-          >
-            Social Media URL
-          </label>
-          <input
-            type="input"
-            id="socmedUrl"
-            name="socmedUrl"
-            value={formData.socmedUrl}
-            onChange={handleInputChange}
-            className="focus:shadow-outline w-full appearance-none rounded border px-3 py-2 leading-tight text-gray-700 shadow focus:outline-none"
-            placeholder="Enter social media profile URL"
-            required
-          />
-        </div>
+              <div className="space-y-2">
+                <Label htmlFor="collegeId">College</Label>
+                <Select
+                  name="collegeId"
+                  value={formData.collegeId}
+                  onValueChange={(value) =>
+                    handleInputChange({
+                      target: { name: "collegeId", value },
+                    } as any)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a College" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {colleges.map((college) => (
+                      <SelectItem
+                        key={college.id}
+                        value={college.id.toString()}
+                      >
+                        {college.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-        <div className="mb-6">
-          <label
-            htmlFor="logoFile"
-            className="mb-2 block text-sm font-bold text-gray-700"
-          >
-            Shop Logo
-          </label>
-          <input
-            type="file"
-            id="logoFile"
-            name="logoFile"
-            accept="image/jpeg,image/png,image/gif"
-            onChange={handleFileChange}
-            className="focus:shadow-outline w-full appearance-none rounded border px-3 py-2 leading-tight text-gray-700 shadow focus:outline-none"
-            required
-          />
-          {logoPreview && (
-            <div className="mt-4 flex justify-center">
-              <img
-                src={logoPreview}
-                alt="Logo Preview"
-                className="max-h-[200px] max-w-[200px] object-contain"
-              />
-            </div>
-          )}
-        </div>
+              <div className="space-y-2">
+                <Label htmlFor="socmedUrl">Social Media URL</Label>
+                <Input
+                  id="socmedUrl"
+                  name="socmedUrl"
+                  value={formData.socmedUrl}
+                  onChange={handleInputChange}
+                  placeholder="Enter social media profile URL"
+                  required
+                />
+              </div>
 
-        <div className="flex items-center justify-between">
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="focus:shadow-outline rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700 focus:outline-none disabled:opacity-50"
-          >
-            {isLoading ? "Adding..." : "Add Shop"}
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push("/admin")}
-            className="focus:shadow-outline rounded px-4 py-2 font-bold text-gray-500 hover:text-gray-700 focus:outline-none"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
+              <div className="space-y-2">
+                <Label htmlFor="logoFile">Shop Logo</Label>
+                <div className="mt-1 flex justify-center rounded-lg border border-dashed border-gray-300 px-6 py-8">
+                  <div className="text-center">
+                    <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                    <div className="mt-4 flex justify-center text-sm leading-6 text-gray-600">
+                      <label
+                        htmlFor="logoFile"
+                        className="relative cursor-pointer rounded-md font-semibold text-primary hover:text-primary/80"
+                      >
+                        <span>Upload a file</span>
+                        <input
+                          id="logoFile"
+                          name="logoFile"
+                          type="file"
+                          className="sr-only"
+                          accept="image/jpeg,image/png,image/gif"
+                          onChange={handleFileChange}
+                          required
+                        />
+                      </label>
+                    </div>
+                    <p className="text-xs leading-5 text-gray-600">
+                      PNG, JPG, GIF up to 5MB
+                    </p>
+                  </div>
+                </div>
+                {logoPreview && (
+                  <div className="mt-4 flex justify-center">
+                    <img
+                      src={logoPreview}
+                      alt="Logo Preview"
+                      className="max-h-[200px] max-w-[200px] rounded-md object-contain"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end space-x-4">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => router.push("/admin")}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? "Adding..." : "Add Shop"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

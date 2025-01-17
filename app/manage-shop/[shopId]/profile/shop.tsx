@@ -275,23 +275,31 @@ const ShopProfilePage = ({
                       </div>
                     )}
                     <div className="flex-1">
-                      <Label
-                        htmlFor="logo"
-                        className="flex h-20 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed bg-muted/25 transition-colors hover:bg-muted/50"
-                      >
-                        <div className="flex flex-col items-center gap-1">
-                          <Upload className="h-4 w-4" />
-                          <span className="text-xs">Upload Logo</span>
+                      <div className="m mt-1 flex justify-center rounded-lg border border-dashed border-gray-300 px-6 py-8">
+                        <div className="text-center">
+                          <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                          <div className="mt-4 flex justify-center text-sm leading-6 text-gray-600">
+                            <label
+                              htmlFor="logoFile"
+                              className="relative cursor-pointer rounded-md font-semibold text-primary hover:text-primary/80"
+                            >
+                              <span>Upload Logo</span>
+                              <input
+                                id="logoFile"
+                                name="logoFile"
+                                type="file"
+                                className="sr-only"
+                                accept="image/jpeg,image/png,image/gif"
+                                onChange={handleLogoUpload}
+                                required
+                              />
+                            </label>
+                          </div>
+                          <p className="text-xs leading-5 text-gray-600">
+                            PNG, JPG, GIF up to 5MB
+                          </p>
                         </div>
-                        <Input
-                          id="logo"
-                          name="logo"
-                          type="file"
-                          accept="image/*"
-                          onChange={handleLogoUpload}
-                          className="hidden"
-                        />
-                      </Label>
+                      </div>
                     </div>
                   </div>
                 </div>

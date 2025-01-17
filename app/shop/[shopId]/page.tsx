@@ -85,6 +85,7 @@ const SearchPage = () => {
         id, 
         name, 
         created_at,
+        ready,
         merchandise_pictures(picture_url), 
         variants(original_price, membership_price), 
         shops!inner(id, name, acronym),

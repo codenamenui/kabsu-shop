@@ -7,6 +7,7 @@ export type Merch = {
   id: number;
   name: string;
   created_at: string;
+  ready: boolean;
   merchandise_pictures: {
     picture_url: string;
   }[];

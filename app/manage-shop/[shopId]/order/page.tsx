@@ -1,14 +1,22 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Order, Orders } from "@/constants/type";
+import { Orders } from "@/constants/type";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Received from "./mark-as-received";
 import { createClient } from "@/supabase/clients/createClient";
+import PaymentReceiptDialog from "./PaymentReceiptDialog";
+
+type Payment = {
+  picture_url: string;
+  order_id: string;
+};
 
 const OrderPage = ({ params }: { params: { shopId: string } }) => {
   const supabase = createClient();
   const [orders, setOrders] = useState<Orders[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
+
   useEffect(() => {
     const getData = async () => {
       const { data: orders, error } = await supabase
@@ -19,7 +27,7 @@ const OrderPage = ({ params }: { params: { shopId: string } }) => {
       quantity, 
       price, 
       variants(id, name), 
-      merchandises(name, merchandise_pictures(picture_url)), 
+      merchandises(id, name, merchandise_pictures(picture_url)), 
       profiles(
         student_number, 
         first_name, 
@@ -44,10 +52,24 @@ const OrderPage = ({ params }: { params: { shopId: string } }) => {
         )
         .eq("shop_id", params.shopId)
         .returns<Orders[]>();
+
+      const orderIds = orders?.map((order) => order.id);
+
+      const { data: payments, error: paymentsError } = await supabase
+        .from("payments")
+        .select("picture_url, order_id")
+        .in("order_id", orderIds ?? [])
+        .returns<Payment[]>();
+
       setOrders(orders ?? []);
+      setPayments(payments ?? []);
     };
     getData();
   }, []);
+
+  const getPaymentForOrder = (orderId: string) => {
+    return payments.find((payment) => payment.order_id === orderId);
+  };
 
   // Group orders by merchandise
   const groupedOrders = orders
@@ -152,6 +174,15 @@ const OrderPage = ({ params }: { params: { shopId: string } }) => {
                                 : "Pending"}
                           </span>
                         </div>
+                        {getPaymentForOrder(order.id)?.picture_url && (
+                          <div className="mt-2">
+                            <PaymentReceiptDialog
+                              imageUrl={
+                                getPaymentForOrder(order.id)?.picture_url ?? ""
+                              }
+                            />
+                          </div>
+                        )}
                       </div>
 
                       <div className="text-sm">
@@ -181,10 +212,7 @@ const OrderPage = ({ params }: { params: { shopId: string } }) => {
                       </div>
                     </div>
                     <div className="flex flex-col space-y-2">
-                      {!order.order_statuses.received &&
-                        !order.order_statuses.cancelled && (
-                          <Received order={order} setOrders={setOrders} />
-                        )}
+                      <Received order={order} setOrders={setOrders} />
                       {order.order_statuses.cancelled &&
                         order.order_statuses.cancel_reason && (
                           <div className="mt-2 text-sm text-red-600">

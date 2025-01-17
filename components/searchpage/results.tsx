@@ -45,9 +45,10 @@ const ResultsDisplay = ({
       </div>
       <div className="">
         <div className="grid grid-cols-4 gap-4">
-          {results?.map((merch: Merch) => (
-            <MerchandiseDisplay merch={merch} key={merch.id} />
-          ))}
+          {results?.map((merch: Merch) => {
+            if (merch.ready)
+              return <MerchandiseDisplay merch={merch} key={merch.id} />;
+          })}
         </div>
       </div>
     </div>

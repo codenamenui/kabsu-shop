@@ -27,6 +27,7 @@ interface TransactionDetails {
 function extractTransactionDetails(text: string): TransactionDetails {
   // Extract mobile number (starts with +63)
   // const mobileNumberMatch = text.match(/\+63\s*\d{3}\s*\d{7}/);
+  console.log(text);
   const mobileNumberMatch = text.match(/\+63\s*\d{3}\s*\d{3}\s*\d{4}/);
   const mobileNumber = mobileNumberMatch ? mobileNumberMatch[0] : null;
 
@@ -137,7 +138,7 @@ const Cart = () => {
       mem_error != null ? variant?.membership_price : variant?.original_price;
 
     price *= order.quantity;
-    if (paymentOption === "irl" && !paymentReceipt) {
+    if (paymentOption === "irl") {
       const {
         data: { id: status_id },
         error: statusError,
@@ -188,6 +189,19 @@ const Cart = () => {
           prevOrders?.filter((o) => o !== order.id.toString()) || [],
       );
 
+      const { error: notificationError2 } = await supabase
+        .from("shop_notifications")
+        .insert([
+          {
+            order_id: data.id,
+            shop_id: order.shops.id,
+            message: "You have a new order!",
+            seen: false,
+          },
+        ]);
+
+      console.log(notificationError2);
+
       return true;
     }
     const worker = await createWorker("eng", 1, {
@@ -209,7 +223,6 @@ const Cart = () => {
       !details.referenceNumber ||
       !details.date
     ) {
-      console.log("HERRE");
       setErrMsg("Invalid receipt");
       return false;
     }
@@ -307,6 +320,20 @@ const Cart = () => {
           prevOrders?.filter((o) => o !== order.id.toString()) || [],
       );
     };
+
+    const { error: notificationError1 } = await supabase
+      .from("shop_notifications")
+      .insert([
+        {
+          order_id: data.id,
+          shop_id: order.shops.id,
+          message: "You have a new order!",
+          seen: false,
+        },
+      ]);
+
+    console.log(notificationError1);
+
     insert();
     setErrMsg("");
     return true;

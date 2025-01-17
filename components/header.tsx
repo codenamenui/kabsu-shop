@@ -37,14 +37,15 @@ const Header = () => {
   const [shops, setShops] = useState<Shop[]>([]);
   const [user, setUser] = useState(null);
   const [query, setQuery] = useState("");
+  const [hasUnseenNotifications, setHasUnseenNotifications] = useState(false);
   const path = usePathname();
   const params = useParams();
   const shopId = params.slug ?? params.shopId;
   const router = useRouter();
+  const supabase = createClientComponentClient();
 
   useEffect(() => {
     const getCategories = async () => {
-      const supabase = createClientComponentClient();
       const { data, error } = await supabase.from("categories").select();
       setCategories(data);
     };
@@ -53,7 +54,6 @@ const Header = () => {
 
   useEffect(() => {
     const getShops = async () => {
-      const supabase = createClientComponentClient();
       const { data, error } = await supabase
         .from("shops")
         .select("id, acronym");
@@ -64,7 +64,6 @@ const Header = () => {
 
   useEffect(() => {
     const getAuth = async () => {
-      const supabase = createClientComponentClient();
       const {
         data: { user },
         error,
@@ -76,6 +75,45 @@ const Header = () => {
     getAuth();
   }, []);
 
+  // Check for unseen notifications
+  useEffect(() => {
+    const checkNotifications = async () => {
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("user_notifications")
+        .select("seen")
+        .eq("user_id", user.id)
+        .eq("seen", false)
+        .limit(1);
+
+      setHasUnseenNotifications(data && data.length > 0);
+    };
+
+    checkNotifications();
+
+    // Set up real-time subscription for notifications
+    const channel = supabase
+      .channel("notifications")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "user_notifications",
+          filter: `user_id=eq.${user?.id}`,
+        },
+        (payload) => {
+          checkNotifications();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   const handleSignOut = async () => {
     const error = await signOut();
     if (!error) {
@@ -86,8 +124,6 @@ const Header = () => {
 
   const logInGoogle = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const supabase = createClientComponentClient();
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -177,9 +213,12 @@ const Header = () => {
           />
         </form>
         <div className="flex">
-          <Link href={"/notification"}>
-            <Button variant="ghost" size="icon">
+          <Link href={"/notifications"}>
+            <Button variant="ghost" size="icon" className="relative">
               <Bell />
+              {hasUnseenNotifications && (
+                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
+              )}
             </Button>
           </Link>
           <Link href={"/cart"}>
@@ -214,4 +253,5 @@ const Header = () => {
     </header>
   );
 };
+
 export default Header;

@@ -4,8 +4,12 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/supabase/clients/createClient";
 import { toast } from "sonner";
+import { BadgeCheck } from "lucide-react";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
-// Type definitions for form data and validation
 interface CollegeFormData {
   name: string;
 }
@@ -82,50 +86,49 @@ const AddCollegePage: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="mb-6 text-center text-3xl font-bold">Add New College</h1>
-
-      <form
-        onSubmit={handleSubmit}
-        className="mx-auto mb-4 max-w-lg rounded bg-white px-8 pb-8 pt-6 shadow-md"
-      >
-        <div className="mb-4">
-          <label
-            htmlFor="name"
-            className="mb-2 block text-sm font-bold text-gray-700"
-          >
-            College Name
-          </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleInputChange}
-            className="focus:shadow-outline w-full appearance-none rounded border px-3 py-2 leading-tight text-gray-700 shadow focus:outline-none"
-            placeholder="Enter full college name"
-            required
-            maxLength={100} // Match database column length
-          />
+    <div className="p-5">
+      <div className="mx-auto max-w-3xl space-y-6">
+        <div className="flex items-center space-x-2">
+          <BadgeCheck className="h-5 w-5 text-primary" />
+          <CardTitle className="text-2xl">Add New College</CardTitle>
         </div>
+        <p className="text-sm text-muted-foreground">
+          Create a new college by filling out the details below
+        </p>
 
-        <div className="flex items-center justify-between">
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="focus:shadow-outline rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700 focus:outline-none disabled:opacity-50"
-          >
-            {isLoading ? "Adding..." : "Add College"}
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push("/admin")}
-            className="focus:shadow-outline rounded px-4 py-2 font-bold text-gray-500 hover:text-gray-700 focus:outline-none"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
+        <Card>
+          <CardContent className="pt-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="name">College Name</Label>
+                <Input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="Enter college name"
+                  required
+                  maxLength={100}
+                />
+              </div>
+
+              <div className="flex items-center justify-end space-x-4">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => router.push("/admin")}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? "Adding..." : "Add College"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

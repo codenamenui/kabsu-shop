@@ -23,6 +23,7 @@ import {
   Store,
 } from "lucide-react";
 import { Merch, ShopManagementType } from "@/constants/type";
+import ToggleReadyButton from "./toggle";
 
 const ShopManagement = async ({ params }: { params: { shopId: string } }) => {
   const supabase = createServerComponentClient({ cookies });
@@ -83,7 +84,7 @@ const ShopManagement = async ({ params }: { params: { shopId: string } }) => {
 
         {/* Quick Actions Grid */}
         <div className="flex w-full justify-center">
-          <div className="grid grid-cols-5 gap-4 sm:grid-cols-5 lg:grid-cols-5">
+          <div className="grid grid-cols-5 gap-4 sm:grid-cols-6 lg:grid-cols-6">
             {[
               {
                 icon: <Package className="h-5 w-5" />,
@@ -108,6 +109,12 @@ const ShopManagement = async ({ params }: { params: { shopId: string } }) => {
                 label: "Members",
                 href: `/manage-shop/${params.shopId}/membership`,
                 color: "bg-green-500",
+              },
+              {
+                icon: <Users className="h-5 w-5" />,
+                label: "Officers",
+                href: `/manage-shop/${params.shopId}/officer`,
+                color: "bg-blue-500",
               },
               {
                 icon: <Settings className="h-5 w-5" />,
@@ -210,6 +217,7 @@ const MerchCard = ({ merch, shopId }: { merch: Merch; shopId: string }) => {
             Edit
           </Link>
         </Button>
+        <ToggleReadyButton merchId={merch.id} />
         <form action={deleteMerch} className="flex-1">
           <Button
             type="submit"

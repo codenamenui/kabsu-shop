@@ -1,7 +1,6 @@
 "use client";
 import { Orders } from "@/constants/type";
 import { createClient } from "@/supabase/clients/createClient";
-import { createServerClient } from "@/supabase/clients/createServer";
 
 export const handleOrderAction = async (
   order: Orders,

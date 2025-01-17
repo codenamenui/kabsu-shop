@@ -191,6 +191,7 @@ const ModifyMerch: React.FC<MerchFormProps> = ({
             cancellable: formData.cancellable,
             receiving_information: formData.receiving_information,
             variant_name: formData.variant_name,
+            ready: true,
           })
           .select("id");
 
@@ -541,23 +542,31 @@ const ModifyMerch: React.FC<MerchFormProps> = ({
                     ))}
                   </div>
                 )}
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Upload className="mr-2 h-4 w-4" />
-                Upload Pictures
-              </Button>
-              <Input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                multiple
-                accept="image/*"
-                className="hidden"
-              />
+              <div className="mt-1 flex justify-center rounded-lg border border-dashed border-gray-300 px-6 py-8">
+                <div className="text-center">
+                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                  <div className="mt-4 flex justify-center text-sm leading-6 text-gray-600">
+                    <label
+                      htmlFor="file"
+                      className="relative cursor-pointer rounded-md font-semibold text-primary hover:text-primary/80"
+                    >
+                      <span>Upload a file</span>
+                      <Input
+                        id="file"
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        multiple
+                        accept="image/*"
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                  <p className="text-xs leading-5 text-gray-600">
+                    PNG, JPG, GIF up to 5MB
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 

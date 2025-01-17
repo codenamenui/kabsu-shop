@@ -18,6 +18,7 @@ import ShopCard from "./shop-card";
 import ConfirmOrderDialog from "./confirm-order";
 import { createClient } from "@/supabase/clients/createClient";
 import { createWorker } from "tesseract.js";
+import OrderCountDisplay from "@/app/merch/[merchId]/orderCount";
 
 interface TransactionDetails {
   mobileNumber: string | null;
@@ -111,64 +112,41 @@ const FullMerchDisplay = ({
   }
 
   async function handleOrderSubmit() {
-    if (!paymentReceipt) return;
-
-    setLoading(true);
-
-    setOcrStatus("Processing...");
-
-    const worker = await createWorker("eng", 1, {
-      logger: (m) => console.log(m), // Add logger here
-    });
-
+    const supabase = createClient();
     const {
-      data: { text },
-    } = await worker.recognize(paymentReceipt);
-    const details = extractTransactionDetails(text);
-    console.log("Mobile Number:", details.mobileNumber);
-    console.log("Amount:", Number(details.amount?.replace(",", "")));
-    console.log("Reference Number:", details.referenceNumber);
-    console.log("Date:", details.date);
-    setOcrResult(text);
-    setOcrStatus("Completed");
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-    if (
-      !details.mobileNumber ||
-      !details.amount ||
-      !details.referenceNumber ||
-      !details.date
-    ) {
-      setErrMsg("Invalid receipt");
-      setLoading(false);
-      return;
+    if (userError) {
+      console.error(userError);
+      return false;
     }
 
-    const insert = async () => {
-      if (paymentOption == "online") {
-        if (paymentReceipt == null) {
-          return;
-        }
-      }
+    const { data: membership, error: mem_error } = await supabase
+      .from("memberships")
+      .select();
 
-      const supabase = createClient();
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
+    const variant = merch.variants[selectedVariant];
 
-      if (userError) {
-        console.error(userError);
-        return;
-      }
+    let price =
+      mem_error != null ? variant?.membership_price : variant?.original_price;
 
+    price *= quantity;
+
+    if (paymentOption === "irl") {
       const {
         data: { id: status_id },
         error: statusError,
-      } = await supabase.from("order_statuses").insert([{}]).select().single();
+      } = await supabase
+        .from("order_statuses")
+        .insert([{ paid: false }])
+        .select()
+        .single();
 
       if (statusError) {
         console.error(statusError);
-        return;
+        return false;
       }
 
       const { data, error } = await supabase
@@ -183,33 +161,89 @@ const FullMerchDisplay = ({
             merch_id: merch.id,
             shop_id: merch.shops.id,
             status_id: status_id,
-            price: membership
-              ? quantity * merch.variants[selectedVariant].membership_price
-              : quantity * merch.variants[selectedVariant].original_price,
+            price: price,
           },
         ])
         .select()
         .single();
-      console.log(data);
+
       if (error) {
         console.error(error);
-        return;
+        return false;
       }
-      const { error: errorReceipt } = await supabase
-        .from("receipts")
+      setOpenConfirmation(false);
+      toast.success(`${merch.name} ordered successfully!`);
+      return true;
+    }
+    const worker = await createWorker("eng", 1, {
+      logger: (m) => console.log(m), // Add logger here
+    });
+    const {
+      data: { text },
+    } = await worker.recognize(paymentReceipt);
+    const details = extractTransactionDetails(text);
+    console.log(details);
+    console.log("Mobile Number:", details.mobileNumber);
+    console.log("Amount:", Number(details.amount?.replace(",", "")));
+    console.log("Reference Number:", details.referenceNumber);
+    console.log("Date:", details.date);
+
+    if (
+      !details.mobileNumber ||
+      !details.amount ||
+      !details.referenceNumber ||
+      !details.date
+    ) {
+      console.log("HERRE");
+      setErrMsg("Invalid receipt");
+      return false;
+    }
+
+    const insert = async () => {
+      if (paymentOption == "online") {
+        if (paymentReceipt == null) {
+          return false;
+        }
+      }
+
+      const {
+        data: { id: status_id },
+        error: statusError,
+      } = await supabase
+        .from("order_statuses")
+        .insert([{ paid: true }])
+        .select()
+        .single();
+
+      if (statusError) {
+        console.error(statusError);
+        return false;
+      }
+
+      const { data, error } = await supabase
+        .from("orders")
         .insert([
           {
-            order_id: data.id,
-            mobile_number: details.mobileNumber,
-            amount: parseFloat(details.amount?.replace(",", "") || ""),
-            reference_number: details.referenceNumber,
+            user_id: user?.id,
+            quantity: quantity,
+            online_payment: paymentOption == "online",
+            physical_payment: paymentOption == "irl",
+            variant_id: merch.variants[selectedVariant].id,
+            merch_id: merch.id,
+            shop_id: merch.shops.id,
+            status_id: status_id,
+            price: price,
           },
         ])
-        .select();
+        .select()
+        .single();
 
-      console.log(errorReceipt);
+      if (error) {
+        console.error(error);
+        return false;
+      }
 
-      if (paymentOption == "online" && paymentReceipt != null) {
+      if (paymentOption == "online") {
         const url = `payment_${data.id}_${Date.now()}`;
         const { error: storageError } = await supabase.storage
           .from("payment-picture")
@@ -229,16 +263,26 @@ const FullMerchDisplay = ({
 
         if (paymentError) {
           console.error(paymentError);
-          return;
+          return false;
         }
       }
-
-      setOpenConfirmation(!openConfirmation);
-      toast.success("Order placed successfully!");
+      const { error: errorReceipt } = await supabase
+        .from("receipts")
+        .insert([
+          {
+            order_id: data.id,
+            mobile_number: details.mobileNumber,
+            amount: parseFloat(details.amount?.replace(",", "") || ""),
+            reference_number: details.referenceNumber,
+          },
+        ])
+        .select();
     };
     insert();
     setErrMsg("");
-    setLoading(false);
+    setOpenConfirmation(false);
+    toast.success(`${merch.name} ordered successfully!`);
+    return true;
   }
 
   const getPrice = (discount: boolean, quantity?: number): string => {
@@ -280,6 +324,9 @@ const FullMerchDisplay = ({
             <h1 className="mb-2 text-3xl font-bold">{merch.name}</h1>
             <div className="text-2xl font-semibold text-emerald-800">
               {getPrice(false)} {" | "} {getPrice(true)}
+            </div>
+            <div className="mt-1">
+              <OrderCountDisplay merchId={merch.id}></OrderCountDisplay>
             </div>
           </div>
 
@@ -352,7 +399,7 @@ const FullMerchDisplay = ({
             </div>
           </form>
 
-          <ShopCard shop={merch.shops} />
+          <ShopCard shop={merch.shops} manage={false} />
 
           <div>
             <h2 className="mb-2 text-xl font-semibold">Description</h2>

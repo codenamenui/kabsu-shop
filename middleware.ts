@@ -23,7 +23,21 @@ export async function middleware(req: NextRequest) {
     url.pathname = "/";
     return NextResponse.redirect(url);
   }
-  console.log(user);
+
+  if (pathname.startsWith("/merch")) {
+    const merchId = pathname.split("/")[2]; // Extract shopId from URL
+    const { data: merch } = await supabase
+      .from("merchandises")
+      .select("ready")
+      .eq("id", merchId)
+      .single();
+    console.log(merch);
+    if (!merch?.ready) {
+      url.pathname = "/";
+      return NextResponse.redirect(url);
+    }
+  }
+
   // Check for admin pages
   if (pathname.startsWith("/admin")) {
     const { data: admin } = await supabase

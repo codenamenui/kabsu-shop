@@ -8,7 +8,7 @@ import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { useEffect, useState } from "react";
 import { createClient } from "@/supabase/clients/createClient";
-import { CreditCard, Wallet } from "lucide-react";
+import { CreditCard, Upload, Wallet } from "lucide-react";
 
 const CartOrderConfirmCard = ({
   order,
@@ -139,25 +139,48 @@ const CartOrderConfirmCard = ({
         </div>
 
         {paymentOption === "online" && (
-          <div className="space-y-2">
-            <Label htmlFor={`gcash-receipt-${order.id}`}>
-              Upload GCash Receipt
-            </Label>
-            <Input
-              id={`gcash-receipt-${order.id}`}
-              type="file"
-              onChange={(e) => {
-                setPaymentReceipt(e.target.files?.[0] || null);
-                paymentUpdate(
-                  order.id.toString(),
-                  paymentOption,
-                  e.target.files?.[0],
-                );
-              }}
-              accept="image/*"
-              className="cursor-pointer"
-              required
-            />
+          <div className="flex justify-center gap-5 space-y-2">
+            <div className="m mt-1 flex justify-center rounded-lg border border-dashed border-gray-300 px-6 py-8">
+              <div className="text-center">
+                <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                <div className="mt-4 flex justify-center text-sm leading-6 text-gray-600">
+                  <label
+                    htmlFor={`gcash-receipt-${order.id}`}
+                    className="relative cursor-pointer rounded-md font-semibold text-primary hover:text-primary/80"
+                  >
+                    <span>Upload GCash Receipt</span>
+                    <input
+                      id={`gcash-receipt-${order.id}`}
+                      name={`gcash-receipt-${order.id}`}
+                      type="file"
+                      className="sr-only"
+                      accept="image/jpeg,image/png,image/gif"
+                      onChange={(e) => {
+                        setPaymentReceipt(e.target.files?.[0] || null);
+                        paymentUpdate(
+                          order.id.toString(),
+                          paymentOption,
+                          e.target.files?.[0],
+                        );
+                      }}
+                      required
+                    />
+                  </label>
+                </div>
+                <p className="text-xs leading-5 text-gray-600">
+                  PNG, JPG, GIF up to 5MB
+                </p>
+              </div>
+            </div>
+            {paymentReceipt && (
+              <div className="mt-4 flex justify-center">
+                <img
+                  src={URL.createObjectURL(paymentReceipt)} // Create URL for the file
+                  alt="Payment Receipt"
+                  className="max-h-[200px] max-w-[200px] rounded-md object-contain"
+                />
+              </div>
+            )}
           </div>
         )}
       </div>
