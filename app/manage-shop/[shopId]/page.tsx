@@ -13,17 +13,19 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  Edit,
+  Bell,
   Package,
   ShoppingBag,
   Users,
   BarChart,
-  Settings,
+  UserCircle,
   Plus,
   Store,
+  Edit,
 } from "lucide-react";
 import { Merch, ShopManagementType } from "@/constants/type";
 import ToggleReadyButton from "./toggle";
+import ToggleCancellableButton from "./toggle-cancellable";
 
 const ShopManagement = async ({ params }: { params: { shopId: string } }) => {
   const supabase = createServerComponentClient({ cookies });
@@ -37,6 +39,13 @@ const ShopManagement = async ({ params }: { params: { shopId: string } }) => {
     .returns<ShopManagementType>()
     .single();
 
+  // Fetch notifications count
+  const { data: notificationCount } = await supabase
+    .from("shop_notifications")
+    .select("*")
+    .eq("shop_id", params.shopId)
+    .eq("seen", false);
+
   if (shopError || !shop) {
     return <div>Shop not found</div>;
   }
@@ -48,6 +57,7 @@ const ShopManagement = async ({ params }: { params: { shopId: string } }) => {
       id, 
       name, 
       created_at,
+      cancellable,
       merchandise_pictures(picture_url), 
       variants(original_price, membership_price), 
       shops!inner(id, name, acronym)
@@ -57,9 +67,9 @@ const ShopManagement = async ({ params }: { params: { shopId: string } }) => {
     .returns<Merch[]>();
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white p-6">
       <div className="mx-auto max-w-7xl space-y-6">
-        {/* Shop Header */}
+        {/* Shop Header with Notification */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             {shop.logo_url ? (
@@ -80,11 +90,26 @@ const ShopManagement = async ({ params }: { params: { shopId: string } }) => {
               <p className="text-gray-500">{shop.colleges?.name}</p>
             </div>
           </div>
+          <Link
+            href={`/manage-shop/${params.shopId}/notifications`}
+            className="relative"
+          >
+            <Button variant="outline" size="icon" className="h-10 w-10">
+              <Bell className="h-5 w-5" />
+              {notificationCount?.length != 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                  {notificationCount.length > 99
+                    ? "99+"
+                    : notificationCount.length}
+                </span>
+              )}
+            </Button>
+          </Link>
         </div>
 
         {/* Quick Actions Grid */}
         <div className="flex w-full justify-center">
-          <div className="grid grid-cols-5 gap-4 sm:grid-cols-6 lg:grid-cols-6">
+          <div className="grid grid-cols-3 gap-4 sm:grid-cols-6 lg:grid-cols-6">
             {[
               {
                 icon: <Package className="h-5 w-5" />,
@@ -114,11 +139,11 @@ const ShopManagement = async ({ params }: { params: { shopId: string } }) => {
                 icon: <Users className="h-5 w-5" />,
                 label: "Officers",
                 href: `/manage-shop/${params.shopId}/officer`,
-                color: "bg-blue-500",
+                color: "bg-yellow-500",
               },
               {
-                icon: <Settings className="h-5 w-5" />,
-                label: "Settings",
+                icon: <UserCircle className="h-5 w-5" />,
+                label: "Profile",
                 href: `/manage-shop/${params.shopId}/profile`,
                 color: "bg-orange-500",
               },
@@ -141,14 +166,8 @@ const ShopManagement = async ({ params }: { params: { shopId: string } }) => {
 
         {/* Merchandise Section */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle>Merchandise</CardTitle>
-            <Button asChild>
-              <Link href={`/manage-shop/${params.shopId}/merch/new`}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add New
-              </Link>
-            </Button>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -210,25 +229,33 @@ const MerchCard = ({ merch, shopId }: { merch: Merch; shopId: string }) => {
           </span>
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between gap-2 border-t p-4">
-        <Button asChild variant="outline" className="flex-1">
-          <Link href={`/manage-shop/${shopId}/merch/${merch.id}`}>
-            <Edit className="mr-2 h-4 w-4" />
-            Edit
-          </Link>
-        </Button>
-        <ToggleReadyButton merchId={merch.id} />
-        <form action={deleteMerch} className="flex-1">
-          <Button
-            type="submit"
-            name="id"
-            value={merch.id}
-            variant="destructive"
-            className="w-full"
-          >
-            Delete
+      <CardFooter className="flex flex-col gap-2 border-t p-4">
+        <div className="flex w-full gap-2">
+          <ToggleReadyButton merchId={merch.id} />
+          <ToggleCancellableButton
+            merchId={merch.id}
+            initialState={merch.cancellable}
+          />
+        </div>
+        <div className="flex w-full gap-2">
+          <Button asChild variant="outline" className="flex-1">
+            <Link href={`/manage-shop/${shopId}/merch/${merch.id}`}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit
+            </Link>
           </Button>
-        </form>
+          <form action={deleteMerch} className="flex-1">
+            <Button
+              type="submit"
+              name="id"
+              value={merch.id}
+              variant="destructive"
+              className="w-full"
+            >
+              Delete
+            </Button>
+          </form>
+        </div>
       </CardFooter>
     </Card>
   );

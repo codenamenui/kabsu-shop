@@ -172,6 +172,17 @@ const FullMerchDisplay = ({
         return false;
       }
       setOpenConfirmation(false);
+
+      const { error: notificationError1 } = await supabase
+        .from("shop_notifications")
+        .insert([
+          {
+            order_id: data.id,
+            shop_id: merch.shops.id,
+            message: "You have a new order!",
+            seen: false,
+          },
+        ]);
       toast.success(`${merch.name} ordered successfully!`);
       return true;
     }
@@ -277,6 +288,17 @@ const FullMerchDisplay = ({
           },
         ])
         .select();
+
+      const { error: notificationError2 } = await supabase
+        .from("shop_notifications")
+        .insert([
+          {
+            order_id: data.id,
+            shop_id: order.shops.id,
+            message: "You have a new order!",
+            seen: false,
+          },
+        ]);
     };
     insert();
     setErrMsg("");

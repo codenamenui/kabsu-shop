@@ -74,6 +74,7 @@ export async function fetchAdminDashboardData(shopId?: number) {
     .from("orders")
     .select(
       `
+      id,
       merchandises (
         id,
         name
@@ -172,6 +173,7 @@ export async function fetchAdminDashboardData(shopId?: number) {
 
   const topSellingMerchandise: TopSellingMerchandise[] =
     topSellingData?.map((order) => ({
+      order_id: order.id,
       id: order.merchandises.id,
       name: order.merchandises.name,
       totalQuantity: order.quantity,

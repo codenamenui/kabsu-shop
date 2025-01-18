@@ -28,10 +28,9 @@ const Orders = () => {
       const { data: orders, error } = await supabase
         .from("orders")
         .select(
-          "id, quantity, price, merchandises(name, merchandise_pictures(picture_url)), variants(name), shops(name, acronym, id), order_statuses(paid, received, received_at, cancelled, cancelled_at, cancel_reason)",
+          "id, quantity, price, merchandises(name, cancellable, merchandise_pictures(picture_url)), variants(name), shops(name, acronym, id), order_statuses(paid, received, received_at, cancelled, cancelled_at, cancel_reason)",
         )
-        .eq("user_id", user?.id)
-        .returns();
+        .eq("user_id", user?.id);
 
       setOrders(orders);
       setError(error);

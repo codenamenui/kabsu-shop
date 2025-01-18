@@ -112,6 +112,12 @@ const OrderCard = ({ order }: { order: Order }) => {
   const StatusIcon = status.icon;
   const pictureUrl = order.merchandises.merchandise_pictures?.[0]?.picture_url;
 
+  // Check if the order can be cancelled
+  const canCancel =
+    order.merchandises.cancellable &&
+    !order.order_statuses.cancelled &&
+    !order.order_statuses.received;
+
   return (
     <Card className="w-full bg-white shadow-sm transition-shadow duration-200 hover:shadow-md">
       <CardHeader className="border-b border-gray-100">
@@ -168,7 +174,7 @@ const OrderCard = ({ order }: { order: Order }) => {
         )}
       </CardContent>
 
-      {!order.order_statuses.cancelled && !order.order_statuses.received && (
+      {canCancel && (
         <CardFooter className="border-t border-gray-100">
           <AlertDialog>
             <AlertDialogTrigger asChild>
