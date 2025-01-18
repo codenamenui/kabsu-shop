@@ -145,7 +145,7 @@ const OrderPage = ({ params }: { params: { shopId: string } }) => {
                       <div>
                         <div className="font-semibold">Order #{order.id}</div>
                         <div className="mt-1 text-sm text-gray-600">
-                          Quantity: {order.quantity} | Price: $
+                          Quantity: {order.quantity} | Price: P
                           {order.price.toFixed(2)}
                         </div>
                         <div className="mt-2 space-x-2">

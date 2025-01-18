@@ -1,30 +1,72 @@
+"use client";
+
 import React from "react";
-import Image from "next/image";
 import { createServerClient } from "@/supabase/clients/createServer";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/card";
 import { Clock, Package, XCircle, CheckCircle } from "lucide-react";
 import { Order } from "@/constants/type";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { createClient } from "@/supabase/clients/createClient";
 
-const OrderCard = async ({ order }: { order: Order }) => {
-  const supabase = createServerClient();
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+const OrderCard = ({ order }: { order: Order }) => {
+  const [cancelReason, setCancelReason] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (userError) {
-    return (
-      <Card className="w-full border-red-200 bg-red-50 p-4">
-        <p className="text-red-600">Not logged in!</p>
-      </Card>
-    );
-  }
+  const handleCancelOrder = async () => {
+    setIsSubmitting(true);
+    const supabase = createClient();
 
-  const { data: membership_status } = await supabase
-    .from("memberships")
-    .select()
-    .eq("user_id", user?.id)
-    .eq("shop_id", order.shops.id);
+    try {
+      const { error: statusError } = await supabase
+        .from("order_statuses")
+        .update({
+          cancelled: true,
+          cancelled_at: new Date().toISOString(),
+          cancel_reason: cancelReason || "No reason provided",
+        })
+        .eq("id", order.id);
+
+      if (statusError) throw statusError;
+
+      const { error: notificationError } = await supabase
+        .from("shop_notifications")
+        .insert({
+          shop_id: order.shops.id,
+          order_id: order.id,
+          message: `Order #${order.id} was cancelled. ${cancelReason ? `Reason: ${cancelReason}` : "No reason provided"}`,
+          seen: false,
+        });
+
+      if (notificationError) throw notificationError;
+
+      window.location.reload();
+    } catch (error) {
+      console.error("Error cancelling order:", error);
+      alert("Failed to cancel order. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const displayPrice = new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -36,6 +78,7 @@ const OrderCard = async ({ order }: { order: Order }) => {
       return {
         label: "Cancelled",
         color: "text-red-500",
+        bgColor: "bg-red-50",
         icon: XCircle,
         details: order.order_statuses.cancel_reason,
       };
@@ -44,6 +87,7 @@ const OrderCard = async ({ order }: { order: Order }) => {
       return {
         label: "Received",
         color: "text-green-500",
+        bgColor: "bg-green-50",
         icon: CheckCircle,
         details: `Received on ${new Date(order.order_statuses.received_at).toLocaleDateString()}`,
       };
@@ -52,62 +96,113 @@ const OrderCard = async ({ order }: { order: Order }) => {
       return {
         label: "Paid",
         color: "text-blue-500",
+        bgColor: "bg-blue-50",
         icon: Package,
       };
     }
     return {
       label: "Pending",
       color: "text-yellow-500",
+      bgColor: "bg-yellow-50",
       icon: Clock,
     };
   };
 
   const status = getOrderStatus();
   const StatusIcon = status.icon;
+  const pictureUrl = order.merchandises.merchandise_pictures?.[0]?.picture_url;
 
   return (
-    <Card className="w-full transition-colors hover:bg-gray-50">
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-        <div>
-          <CardTitle className="text-base">Order #{order.id}</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            {order.shops.name}{" "}
-            {order.shops.acronym && `(${order.shops.acronym})`}
-          </p>
-        </div>
-        <div className={`flex items-center gap-1.5 ${status.color}`}>
-          <StatusIcon className="h-4 w-4" />
-          <span className="text-sm font-medium">{status.label}</span>
+    <Card className="w-full bg-white shadow-sm transition-shadow duration-200 hover:shadow-md">
+      <CardHeader className="border-b border-gray-100">
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <CardTitle className="truncate text-lg font-semibold text-gray-900">
+              Order #{order.id}
+            </CardTitle>
+            <CardDescription className="truncate text-sm text-gray-500">
+              {order.shops.name}{" "}
+              {order.shops.acronym && `(${order.shops.acronym})`}
+            </CardDescription>
+          </div>
+          <div
+            className={`flex shrink-0 items-center gap-2 rounded-full px-3 py-1.5 ${status.bgColor} ${status.color}`}
+          >
+            <StatusIcon className="h-4 w-4" />
+            <span className="whitespace-nowrap text-sm font-medium">
+              {status.label}
+            </span>
+          </div>
         </div>
       </CardHeader>
 
-      <CardContent>
-        <div className="space-y-4">
-          <div className="flex gap-4">
-            <Image
-              src={order.merchandises.merchandise_pictures[0].picture_url}
-              alt={order.merchandises.name}
-              width={80}
-              height={80}
-              className="rounded-md object-cover"
-            />
-            <div className="flex-1">
-              <h3 className="font-medium">{order.merchandises.name}</h3>
-              <p className="text-sm text-muted-foreground">
-                Variant: {order.variants.name}
+      <CardContent className="flex flex-col space-y-4 py-4">
+        <div className="flex gap-4">
+          {pictureUrl && (
+            <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg">
+              <img
+                src={pictureUrl}
+                alt={order.merchandises.name}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          )}
+          <div className="flex-1">
+            <h3 className="mb-2 font-medium text-gray-900">
+              {order.merchandises.name}
+            </h3>
+            <div className="flex flex-col space-y-1 text-sm text-gray-500">
+              <p>Variant: {order.variants.name}</p>
+              <p>Quantity: {order.quantity}</p>
+              <p className="mt-1 text-base font-medium text-gray-900">
+                {displayPrice}
               </p>
-              <p className="text-sm text-muted-foreground">
-                Quantity: {order.quantity}
-              </p>
-              <p className="mt-1 font-medium">{displayPrice}</p>
             </div>
           </div>
-
-          {status.details && (
-            <p className="text-sm text-muted-foreground">{status.details}</p>
-          )}
         </div>
+
+        {status.details && (
+          <p className="border-t border-gray-100 pt-3 text-sm italic text-gray-500">
+            {status.details}
+          </p>
+        )}
       </CardContent>
+
+      {!order.order_statuses.cancelled && !order.order_statuses.received && (
+        <CardFooter className="border-t border-gray-100">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" className="w-full">
+                Cancel Order
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Cancel Order</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Optionally provide a reason for cancelling this order. The
+                  shop will be notified.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <Input
+                placeholder="Reason for cancellation (optional)"
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                className="mt-2"
+              />
+              <AlertDialogFooter>
+                <AlertDialogCancel>Never mind</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleCancelOrder}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Cancelling..." : "Confirm Cancel"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </CardFooter>
+      )}
     </Card>
   );
 };

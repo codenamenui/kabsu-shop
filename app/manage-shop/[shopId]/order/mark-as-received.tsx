@@ -155,6 +155,7 @@ const OrderActions = ({
           id={`paid-${order.id}`}
           checked={order.order_statuses.paid}
           onCheckedChange={(checked) => handleToggle("paid", checked)}
+          disabled={order.order_statuses.paid && order.order_statuses.received}
         />
         <Label htmlFor={`paid-${order.id}`}>
           {order.order_statuses.paid ? "Paid" : "Mark as Paid"}

@@ -38,6 +38,7 @@ const Header = () => {
   const [user, setUser] = useState(null);
   const [query, setQuery] = useState("");
   const [hasUnseenNotifications, setHasUnseenNotifications] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
   const path = usePathname();
   const params = useParams();
   const shopId = params.slug ?? params.shopId;
@@ -74,6 +75,46 @@ const Header = () => {
     };
     getAuth();
   }, []);
+
+  // Check for cart items count
+  useEffect(() => {
+    const fetchCartCount = async () => {
+      if (!user) {
+        setCartCount(0);
+        return;
+      }
+
+      const { count } = await supabase
+        .from("cart_orders")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id);
+
+      setCartCount(count || 0);
+    };
+
+    fetchCartCount();
+
+    // Set up real-time subscription for cart updates
+    const channel = supabase
+      .channel("cart-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "cart_orders",
+          filter: `user_id=eq.${user?.id}`,
+        },
+        (payload) => {
+          fetchCartCount();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   // Check for unseen notifications
   useEffect(() => {
@@ -222,8 +263,13 @@ const Header = () => {
             </Button>
           </Link>
           <Link href={"/cart"}>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="relative">
               <ShoppingCart />
+              {cartCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-xs text-white">
+                  {cartCount}
+                </span>
+              )}
             </Button>
           </Link>
           {user ? (

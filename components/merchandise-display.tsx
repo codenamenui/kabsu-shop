@@ -1,11 +1,32 @@
+"use client";
+
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import Link from "next/link";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { Merch } from "@/constants/type";
 import { motion } from "framer-motion";
+import { createClient } from "@/supabase/clients/createClient";
 
 const MerchandiseDisplay = ({ merch }: { merch: Merch }) => {
+  const [orderCount, setOrderCount] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchOrderCount = async () => {
+      const supabase = createClient();
+      const { count, error } = await supabase
+        .from("orders")
+        .select("*", { count: "exact", head: true })
+        .eq("merch_id", merch.id);
+
+      if (!error && count !== null) {
+        setOrderCount(count);
+      }
+    };
+
+    fetchOrderCount();
+  }, [merch.id]);
+
   const originalPrice = Math.min(
     ...merch.variants.map((variant) => variant.original_price ?? 0),
   );
@@ -29,7 +50,7 @@ const MerchandiseDisplay = ({ merch }: { merch: Merch }) => {
     <Link href={`/merch/${merch.id}`} key={merch.id}>
       <motion.div
         whileHover={{
-          scale: 1.02,
+          scale: 1.0005,
           boxShadow: "0 10px 20px rgba(0, 0, 0, 0.12)",
           zIndex: 1,
         }}
@@ -44,13 +65,20 @@ const MerchandiseDisplay = ({ merch }: { merch: Merch }) => {
           <CardContent className="p-5">
             {merch.merchandise_pictures &&
             merch.merchandise_pictures.length > 0 ? (
-              <Image
-                alt={merch.name}
-                width={192}
-                height={192}
-                src={merch.merchandise_pictures[0].picture_url}
-                className="h-48 w-48"
-              />
+              <div className="relative">
+                <Image
+                  alt={merch.name}
+                  width={192}
+                  height={192}
+                  src={merch.merchandise_pictures[0].picture_url}
+                  className="h-48 w-48"
+                />
+                {orderCount > 0 && (
+                  <div className="absolute right-0 top-0 rounded-bl bg-emerald-800 px-2 py-1 text-xs text-white">
+                    {orderCount} pre-orders
+                  </div>
+                )}
+              </div>
             ) : (
               <p>No image available</p>
             )}

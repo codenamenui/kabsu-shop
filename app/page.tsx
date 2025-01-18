@@ -1,3 +1,4 @@
+import FeaturedProducts from "@/components/features";
 import Categories from "@/components/homepage/categories-bar";
 import Welcome from "@/components/homepage/greetings-bar";
 import Shops from "@/components/homepage/shops-bar";
@@ -13,6 +14,7 @@ export default async function Home() {
       <Welcome user={user} />
       <Categories />
       <Shops />
+      <FeaturedProducts />
     </div>
   );
 }
