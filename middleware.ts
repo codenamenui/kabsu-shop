@@ -14,6 +14,17 @@ export async function middleware(req: NextRequest) {
     error,
   } = await supabase.auth.getUser();
 
+  // Check for admin pages
+  const { data: admin } = await supabase
+    .from("admins")
+    .select("id")
+    .eq("id", user?.id)
+    .single();
+
+  if (admin) {
+    return NextResponse.next();
+  }
+
   // Allow requests to root without restriction
   if (pathname === "/") {
     return NextResponse.next();
@@ -57,12 +68,6 @@ export async function middleware(req: NextRequest) {
 
   // Check for admin pages
   if (pathname.startsWith("/admin")) {
-    const { data: admin } = await supabase
-      .from("admins")
-      .select("id")
-      .eq("id", user.id)
-      .single();
-
     if (!admin) {
       url.pathname = "/";
       return NextResponse.redirect(url);
