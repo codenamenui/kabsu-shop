@@ -132,7 +132,7 @@ const Cart = () => {
       .select()
       .eq("email", user?.email)
       .eq("shop_id", order.shops.id);
-    console.log(mem_error);
+
     const variant = order.merchandises.variants.find(
       (v) => v.id === order.variant_id,
     );
@@ -203,7 +203,7 @@ const Cart = () => {
         ]);
 
       console.log(notificationError2);
-
+      setOpenConfirmation(false);
       return true;
     }
 
@@ -331,6 +331,7 @@ const Cart = () => {
 
     insert();
     setErrMsg("");
+    setOpenConfirmation(false);
     return true;
   };
 
@@ -340,12 +341,11 @@ const Cart = () => {
       if (!order) return;
       console.log(order);
 
-      const confirmation = submitOrder(
+      submitOrder(
         order,
         orderPayments[orderId].paymentOption,
         orderPayments[orderId].paymentReceipt,
       );
-      setOpenConfirmation(confirmation);
     });
   };
 
