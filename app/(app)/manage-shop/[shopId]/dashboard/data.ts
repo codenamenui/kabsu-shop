@@ -60,11 +60,13 @@ export async function fetchAdminDashboardData(shopId?: number) {
     .select(
       `
       price,
+      created_at,
       order_statuses (
         paid,
         received,
         cancelled
       )
+      
     `,
     )
     .eq("shop_id", shopId);

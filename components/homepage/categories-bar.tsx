@@ -60,8 +60,9 @@ const Categories = () => {
                       <div
                         role="button"
                         onClick={() => redirectCategory(category)}
+                        className="flex flex-col items-center justify-center"
                       >
-                        <div className="h-16 w-16">
+                        <div className="flex h-16 w-16 items-center justify-center">
                           <Image
                             src={category.picture_url}
                             alt={category.name}

@@ -129,14 +129,16 @@ const Cart = () => {
 
     const { data: membership, error: mem_error } = await supabase
       .from("memberships")
-      .select();
-
+      .select()
+      .eq("email", user?.email)
+      .eq("shop_id", order.shops.id);
+    console.log(mem_error);
     const variant = order.merchandises.variants.find(
       (v) => v.id === order.variant_id,
     );
     let price =
-      mem_error != null ? variant?.membership_price : variant?.original_price;
-
+      mem_error == null ? variant?.membership_price : variant?.original_price;
+    console.log(price);
     price *= order.quantity;
     if (paymentOption === "irl") {
       const {

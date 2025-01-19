@@ -125,12 +125,14 @@ const FullMerchDisplay = ({
 
     const { data: membership, error: mem_error } = await supabase
       .from("memberships")
-      .select();
+      .select()
+      .eq("email", user?.email)
+      .eq("shop_id", merch?.shops.id);
 
     const variant = merch.variants[selectedVariant];
 
     let price =
-      mem_error != null ? variant?.membership_price : variant?.original_price;
+      mem_error == null ? variant?.membership_price : variant?.original_price;
 
     price *= quantity;
 

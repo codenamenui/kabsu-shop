@@ -39,7 +39,7 @@ const MerchandisePage = async ({ params }: { params: { merchId: string } }) => {
   let { data: membership_status, error: membershipError } = await supabase
     .from("memberships")
     .select()
-    .eq("user_id", user?.id)
+    .eq("email", user?.email)
     .eq("shop_id", merch?.shops.id);
 
   return (

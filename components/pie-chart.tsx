@@ -1,16 +1,13 @@
-"use client";
-
-import * as React from "react";
-import { TrendingUp } from "lucide-react";
+import React from "react";
+import { useEffect, useState } from "react";
 import { Label, Pie, PieChart } from "recharts";
-
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import {
   ChartConfig,
@@ -18,13 +15,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-const chartData = [
-  { browser: "chrome", visitors: 275, fill: "var(--color-chrome)" },
-  { browser: "safari", visitors: 200, fill: "var(--color-safari)" },
-  { browser: "firefox", visitors: 287, fill: "var(--color-firefox)" },
-  { browser: "edge", visitors: 173, fill: "var(--color-edge)" },
-  { browser: "other", visitors: 190, fill: "var(--color-other)" },
-];
 
 const chartConfig = {
   visitors: {
@@ -52,23 +42,44 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function PieChartComponent({ orders }) {
+export function PieChartComponent({ orders, count }) {
+  const [dateRange, setDateRange] = useState("");
+
   const statusColorMap = {
     pending: "#FFA500", // Orange
     received: "#4CAF50", // Green
     paid: "#2196F3", // Blue
     cancelled: "#F44336", // Red
   };
-  console.log(
-    orders?.find((order) => order?.status === "Received").quantities -
-      orders?.find((order) => order?.status === "Received").quantities,
-  );
-  console.log(orders);
+
+  useEffect(() => {
+    if (orders && orders.length > 0) {
+      // Get dates from orders
+      console.log(count);
+      const dates = orders.map((order) => new Date(count.created_at));
+      const earliestDate = new Date(Math.min(...dates));
+      const latestDate = new Date(Math.max(...dates));
+
+      // Format dates
+      const formatDate = (date) => {
+        return date.toLocaleDateString("en-US", {
+          month: "long",
+          year: "numeric",
+        });
+      };
+
+      // Create date range string
+      const range = `${formatDate(earliestDate)} - ${formatDate(latestDate)}`;
+      if (range.startsWith("Invalid Date")) setDateRange("INVALID");
+      setDateRange(range);
+    }
+  }, [orders]);
+
   const chartData =
     orders?.map((order) => {
       let quantity =
         order?.quantities -
-        orders?.find((order) => order.status === "Received").quantities;
+        (orders?.find((o) => o.status === "Received")?.quantities || 0);
       if (quantity < 0) quantity = 0;
       return {
         status: order?.status,
@@ -77,14 +88,17 @@ export function PieChartComponent({ orders }) {
       };
     }) ?? [];
 
-  const totalVisitors = React.useMemo(() => {
+  const totalOrders = React.useMemo(() => {
     return chartData.reduce((acc, curr) => acc + curr.quantity, 0);
-  }, []);
+  }, [chartData]);
+
   return (
     <Card className="flex flex-col">
       <CardHeader className="items-center pb-0">
         <CardTitle>Order Status</CardTitle>
-        <CardDescription>January - June 2024</CardDescription>
+        <CardDescription>
+          {dateRange == "INVALID" ? dateRange : "No orders found"}
+        </CardDescription>
       </CardHeader>
       <CardContent className="flex-1 pb-0">
         <ChartContainer
@@ -118,7 +132,7 @@ export function PieChartComponent({ orders }) {
                           y={viewBox.cy}
                           className="fill-foreground text-3xl font-bold"
                         >
-                          {totalVisitors.toLocaleString()}
+                          {totalOrders.toLocaleString()}
                         </tspan>
                         <tspan
                           x={viewBox.cx}
@@ -137,12 +151,17 @@ export function PieChartComponent({ orders }) {
         </ChartContainer>
       </CardContent>
       <CardFooter className="flex-col gap-2 text-sm">
-        <div className="flex items-center gap-2 font-medium leading-none">
-          Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
-        </div>
-        <div className="leading-none text-muted-foreground">
-          Showing total visitors for the last 6 months
-        </div>
+        {chartData.map((item, index) => (
+          <div key={index} className="flex items-center gap-2">
+            <div
+              className="h-3 w-3 rounded-full"
+              style={{ backgroundColor: item.fill }}
+            />
+            <span className="capitalize">
+              {item.status}: {item.quantity}
+            </span>
+          </div>
+        ))}
       </CardFooter>
     </Card>
   );

@@ -183,6 +183,11 @@ export default function AdminDashboard({
           orders={dashboardData.orderStatus.map((status) => ({
             status: status.status,
             quantities: status.count,
+            orders: status.totalOrders,
+          }))}
+          count={dashboardData.collegeOrderSummary.map((college) => ({
+            college: college.collegeName,
+            orders: college.totalOrders,
           }))}
         />
       </div>

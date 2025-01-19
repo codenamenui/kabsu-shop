@@ -1,13 +1,9 @@
-"use client";
-
-import { TrendingUp } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
-
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -18,12 +14,6 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 
-const chartData = [
-  { college: "CEIT", orders: 186 },
-  { college: "Business", orders: 250 },
-  { college: "Engineering", orders: 220 },
-];
-
 const chartConfig = {
   orders: {
     label: "Orders",
@@ -32,15 +22,50 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function BarChartComponent({ orders }) {
+  const [dateRange, setDateRange] = useState("");
+
+  useEffect(() => {
+    if (orders && orders.length > 0) {
+      // Assuming each order has a 'date' field in ISO format
+      const dates = orders.map((order) => new Date(order.created_at));
+      const earliestDate = new Date(Math.min(...dates));
+      const latestDate = new Date(Math.max(...dates));
+
+      // Format dates
+      const formatDate = (date) => {
+        return date.toLocaleDateString("en-US", {
+          month: "long",
+          year: "numeric",
+        });
+      };
+
+      // Create date range string
+      const range = `${formatDate(earliestDate)} - ${formatDate(latestDate)}`;
+      setDateRange(range);
+    }
+  }, [orders]);
+
+  // Process data to group by college
+  const collegeData = orders?.reduce((acc, order) => {
+    const college = order.college;
+    if (!acc[college]) {
+      acc[college] = { college, orders: 0 };
+    }
+    acc[college].orders += 1;
+    return acc;
+  }, {});
+
+  const chartData = Object.values(collegeData || {});
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Order per Colleges</CardTitle>
-        <CardDescription>January - June 2024</CardDescription>
+    <Card className="flex flex-col">
+      <CardHeader className="items-center pb-0">
+        <CardTitle>Orders per College</CardTitle>
+        <CardDescription>{dateRange || "No orders found"}</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
-          <BarChart accessibilityLayer data={orders}>
+          <BarChart data={chartData}>
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="college"
@@ -56,14 +81,6 @@ export function BarChartComponent({ orders }) {
           </BarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col items-start gap-2 text-sm">
-        <div className="flex gap-2 font-medium leading-none">
-          Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
-        </div>
-        <div className="leading-none text-muted-foreground">
-          Showing total visitors for the last 6 months
-        </div>
-      </CardFooter>
     </Card>
   );
 }

@@ -244,9 +244,9 @@ const ModifyMerch: React.FC<MerchFormProps> = ({
       if (merch_error) {
         throw merch_error;
       }
+      toast.success("Merchandise saved successfully");
       router.push(`/manage-shop/${shopId}`);
       router.refresh();
-      toast.success("Merchandise saved successfully");
     } catch (error) {
       console.error("Error in merchandise submission:", error);
       toast.error("Failed to save merchandise");
@@ -570,28 +570,44 @@ const ModifyMerch: React.FC<MerchFormProps> = ({
             </div>
           </div>
 
-          {/* Variants Section */}
           <div className="rounded-lg border p-4">
             <h3 className="mb-4 flex items-center gap-2 font-semibold">
               <Layers className="h-5 w-5" />
-              Variants
+              Product Variants
             </h3>
+            {/* <p className="mb-4 text-sm text-gray-600">
+              Add different versions of your merchandise (e.g., sizes, colors,
+              styles). Each variant must have a regular price and a discounted
+              member price.
+            </p> */}
+
             <div className="space-y-4">
-              {formData.variants &&
-                formData.variants.map((variant, index) => (
-                  <div
-                    key={index}
-                    className="grid grid-cols-1 gap-2 rounded-lg border p-3 md:grid-cols-4"
-                  >
+              {/* Existing Variants */}
+              {formData.variants?.map((variant, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-1 gap-2 rounded-lg border p-3 md:grid-cols-4"
+                >
+                  <div className="space-y-1">
+                    <label className="text-xs text-gray-500">
+                      Variant Name
+                    </label>
                     <Input
                       value={variant.name}
                       onChange={(e) =>
                         handleVariantChange(index, "name", e.target.value)
                       }
-                      placeholder="Variant Name"
+                      placeholder="e.g., Small, Red, Classic"
                     />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-gray-500">
+                      Regular Price (P)
+                    </label>
                     <Input
                       type="number"
+                      min="0"
+                      step="0.01"
                       value={variant.original_price}
                       onChange={(e) =>
                         handleVariantChange(
@@ -600,10 +616,17 @@ const ModifyMerch: React.FC<MerchFormProps> = ({
                           Number(e.target.value),
                         )
                       }
-                      placeholder="Original Price"
+                      placeholder="0.00"
                     />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-gray-500">
+                      Member Price (P)
+                    </label>
                     <Input
                       type="number"
+                      min="0"
+                      step="0.01"
                       value={variant.membership_price}
                       onChange={(e) =>
                         handleVariantChange(
@@ -612,8 +635,10 @@ const ModifyMerch: React.FC<MerchFormProps> = ({
                           Number(e.target.value),
                         )
                       }
-                      placeholder="Member Price"
+                      placeholder="0.00"
                     />
+                  </div>
+                  <div className="flex items-end">
                     <Button
                       type="button"
                       variant="destructive"
@@ -625,53 +650,83 @@ const ModifyMerch: React.FC<MerchFormProps> = ({
                           ),
                         }))
                       }
+                      className="w-full"
                     >
                       <X className="mr-2 h-4 w-4" />
                       Remove
                     </Button>
                   </div>
-                ))}
-              <div className="grid grid-cols-1 gap-2 rounded-lg border p-3 md:grid-cols-4">
-                <Input
-                  value={newVariant.name}
-                  onChange={(e) =>
-                    setNewVariant((prev) => ({
-                      ...prev,
-                      name: e.target.value,
-                    }))
-                  }
-                  placeholder="New Variant Name"
-                />
-                <Input
-                  type="number"
-                  value={newVariant.original_price}
-                  onChange={(e) =>
-                    setNewVariant((prev) => ({
-                      ...prev,
-                      original_price: Number(e.target.value),
-                    }))
-                  }
-                  placeholder="Original Price"
-                />
-                <Input
-                  type="number"
-                  value={newVariant.membership_price}
-                  onChange={(e) =>
-                    setNewVariant((prev) => ({
-                      ...prev,
-                      membership_price: Number(e.target.value),
-                    }))
-                  }
-                  placeholder="Member Price"
-                />
-                <Button
-                  type="button"
-                  onClick={handleAddVariant}
-                  className="flex items-center"
-                >
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Add
-                </Button>
+                </div>
+              ))}
+
+              {/* New Variant Form */}
+              <div className="grid grid-cols-1 gap-2 rounded-lg border bg-gray-50 p-3 md:grid-cols-4">
+                <div className="space-y-1">
+                  <label className="text-xs text-gray-500">
+                    New Variant Name
+                  </label>
+                  <Input
+                    value={newVariant.name}
+                    onChange={(e) =>
+                      setNewVariant((prev) => ({
+                        ...prev,
+                        name: e.target.value,
+                      }))
+                    }
+                    placeholder="e.g., Small, Red, Classic"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-gray-500">
+                    Regular Price (P)
+                  </label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={newVariant.original_price}
+                    onChange={(e) =>
+                      setNewVariant((prev) => ({
+                        ...prev,
+                        original_price: Number(e.target.value),
+                      }))
+                    }
+                    placeholder="0.00"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-gray-500">
+                    Member Price (P)
+                  </label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={newVariant.membership_price}
+                    onChange={(e) =>
+                      setNewVariant((prev) => ({
+                        ...prev,
+                        membership_price: Number(e.target.value),
+                      }))
+                    }
+                    placeholder="0.00"
+                  />
+                </div>
+                <div className="flex items-end">
+                  <Button
+                    type="button"
+                    onClick={handleAddVariant}
+                    className="w-full"
+                    disabled={
+                      !newVariant.name ||
+                      !newVariant.original_price ||
+                      !newVariant.membership_price
+                    }
+                  >
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Variant
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -680,20 +735,33 @@ const ModifyMerch: React.FC<MerchFormProps> = ({
           <div className="rounded-lg border p-4">
             <h3 className="mb-4 flex items-center gap-2 font-semibold">
               <Info className="h-5 w-5" />
-              Receiving Information
+              Delivery Information
             </h3>
+            {/* <p className="mb-4 text-sm text-gray-600">
+              Provide details about how customers can receive or pick up their
+              merchandise. Include location, timing, and any special
+              instructions.
+            </p> */}
             <Textarea
               name="receiving_information"
               value={formData.receiving_information}
               onChange={handleInputChange}
-              placeholder="Explain how and where customers can receive their merchandise"
+              placeholder="Example: Available for pickup at the student center Monday-Friday, 9 AM - 5 PM. Please bring your student ID."
               className="min-h-[100px]"
             />
           </div>
         </CardContent>
 
         <CardFooter>
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={
+              isSubmitting ||
+              formData.variants?.length <= 0 ||
+              formData.receiving_information == undefined
+            }
+          >
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
