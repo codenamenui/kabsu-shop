@@ -155,11 +155,12 @@ const OrderActions = ({
           id={`paid-${order.id}`}
           checked={order.order_statuses.paid}
           onCheckedChange={(checked) => handleToggle("paid", checked)}
-          disabled={order.order_statuses.paid && order.order_statuses.received}
+          disabled={
+            (order.order_statuses.paid && order.order_statuses.received) ||
+            order.order_statuses.cancelled
+          }
         />
-        <Label htmlFor={`paid-${order.id}`}>
-          {order.order_statuses.paid ? "Paid" : "Mark as Paid"}
-        </Label>
+        <Label htmlFor={`paid-${order.id}`}>Paid</Label>
       </div>
 
       <div className="flex items-center space-x-2">
@@ -167,11 +168,11 @@ const OrderActions = ({
           id={`received-${order.id}`}
           checked={order.order_statuses.received}
           onCheckedChange={(checked) => handleToggle("receive", checked)}
-          disabled={!order.order_statuses.paid}
+          disabled={
+            !order.order_statuses.paid || order.order_statuses.cancelled
+          }
         />
-        <Label htmlFor={`received-${order.id}`}>
-          {order.order_statuses.received ? "Received" : "Mark as Received"}
-        </Label>
+        <Label htmlFor={`received-${order.id}`}>Received</Label>
       </div>
 
       {!order.order_statuses.cancelled && !order.order_statuses.received && (

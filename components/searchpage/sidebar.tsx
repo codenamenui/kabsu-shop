@@ -1,6 +1,19 @@
 import React from "react";
 import { Checkbox } from "../ui/checkbox";
 import { Category, Shop } from "@/constants/type";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+
+interface SearchSidebarProps {
+  handleCategoryChange: (categoryId: number) => void;
+  selectedCategories: number[];
+  categories: Category[];
+  shops?: Shop[];
+  handleShopChange?: (shopId: number) => void;
+  selectedShops: number[];
+  className?: string;
+}
 
 const SearchSidebar = ({
   handleCategoryChange,
@@ -9,59 +22,86 @@ const SearchSidebar = ({
   shops,
   selectedShops,
   handleShopChange,
-}: {
-  handleCategoryChange: (categoryId: number) => void;
-  selectedCategories: number[];
-  categories: Category[];
-  shops?: Shop[];
-  handleShopChange?: (shopId: number) => void;
-  selectedShops: number[];
-}) => {
-  return (
-    <aside className="border-r border-zinc-200 pr-32 pt-4">
-      <div className="flex flex-col gap-3">
-        <h4 className="text-base font-semibold">Filters</h4>
-        <div>
-          <p className="pb-2 font-semibold">Categories</p>
-          <div className="flex flex-col gap-2 text-sm">
-            {categories?.map((category) => (
-              <div key={category.id} className="flex items-center gap-2">
+  className,
+}: SearchSidebarProps) => {
+  const FilterSection = ({
+    title,
+    items,
+    selectedItems,
+    handleChange,
+    getName,
+    getId,
+  }: {
+    title: string;
+    items: any[];
+    selectedItems: number[];
+    handleChange: (id: number) => void;
+    getName: (item: any) => string;
+    getId: (item: any) => number;
+  }) => (
+    <div className="space-y-4">
+      <h3 className="text-sm font-medium text-foreground/80">{title}</h3>
+      <ScrollArea className="pr-4">
+        <div className="space-y-3">
+          {items.map((item) => {
+            const id = getId(item);
+            const isSelected = selectedItems.includes(id);
+            return (
+              <div
+                key={id}
+                className={cn(
+                  "group flex items-center space-x-2 rounded-md px-2 py-1.5 transition-colors hover:bg-muted",
+                  isSelected && "bg-muted",
+                )}
+              >
                 <Checkbox
-                  id={`category-${category.id}`}
-                  onClick={() => handleCategoryChange(category.id)}
-                  checked={selectedCategories.includes(category.id)}
+                  id={`${title.toLowerCase()}-${id}`}
+                  checked={isSelected}
+                  onCheckedChange={() => handleChange(id)}
+                  className="border-muted-foreground/30"
                 />
                 <label
-                  htmlFor={`category-${category.id}`}
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  htmlFor={`${title.toLowerCase()}-${id}`}
+                  className={cn(
+                    "cursor-pointer select-none text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+                    isSelected && "text-foreground",
+                    !isSelected && "text-muted-foreground",
+                  )}
                 >
-                  {category.name}
+                  {getName(item)}
                 </label>
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
-        {handleShopChange != null && (
-          <div>
-            <p className="pb-2 font-semibold">Shops</p>
-            <div className="flex flex-col gap-2 text-sm">
-              {shops?.map((shop) => (
-                <div key={shop.id} className="flex items-center gap-2">
-                  <Checkbox
-                    id={`shop-${shop.id}`}
-                    onClick={() => handleShopChange(shop.id)}
-                    checked={selectedShops.includes(shop.id)}
-                  />
-                  <label
-                    htmlFor={`shop-${shop.id}`}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    {shop.acronym}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
+      </ScrollArea>
+    </div>
+  );
+
+  return (
+    <aside className={cn("w-full space-y-6", className)}>
+      <div className="space-y-6">
+        <FilterSection
+          title="Categories"
+          items={categories}
+          selectedItems={selectedCategories}
+          handleChange={handleCategoryChange}
+          getName={(item: Category) => item.name}
+          getId={(item: Category) => item.id}
+        />
+
+        {handleShopChange && shops && shops.length > 0 && (
+          <>
+            <Separator className="my-4" />
+            <FilterSection
+              title="Shops"
+              items={shops}
+              selectedItems={selectedShops}
+              handleChange={handleShopChange}
+              getName={(item: Shop) => item.acronym}
+              getId={(item: Shop) => item.id}
+            />
+          </>
         )}
       </div>
     </aside>

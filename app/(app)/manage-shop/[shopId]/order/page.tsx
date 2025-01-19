@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Received from "./mark-as-received";
 import { createClient } from "@/supabase/clients/createClient";
 import PaymentReceiptDialog from "./PaymentReceiptDialog";
+import ExpandableText from "@/components/expandable-text";
 
 type Payment = {
   picture_url: string;
@@ -215,7 +216,7 @@ const OrderPage = ({ params }: { params: { shopId: string } }) => {
                       <Received order={order} setOrders={setOrders} />
                       {order.order_statuses.cancelled &&
                         order.order_statuses.cancel_reason && (
-                          <div className="mt-2 text-sm text-red-600">
+                          <div className="mt-2 w-[200px] whitespace-normal break-words text-sm text-red-600">
                             Cancel Reason: {order.order_statuses.cancel_reason}
                           </div>
                         )}

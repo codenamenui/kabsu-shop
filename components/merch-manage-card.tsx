@@ -1,7 +1,7 @@
 import { Merch } from "@/constants/type";
 import React from "react";
 import { Card, CardContent, CardFooter } from "./ui/card";
-import { deleteMerch } from "@/app/manage-shop/[shopId]/actions";
+import { deleteMerch } from "@/app/(app)/manage-shop/[shopId]/actions";
 import { Edit } from "lucide-react";
 import { MdDelete } from "react-icons/md";
 import { Button } from "./ui/button";

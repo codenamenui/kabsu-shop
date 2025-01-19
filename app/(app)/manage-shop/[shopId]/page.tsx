@@ -3,7 +3,7 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import { cookies } from "next/headers";
 import Link from "next/link";
 import Image from "next/image";
-import { deleteMerch } from "@/app/manage-shop/[shopId]/actions";
+import { deleteMerch } from "@/app/(app)/manage-shop/[shopId]/actions";
 import {
   Card,
   CardContent,

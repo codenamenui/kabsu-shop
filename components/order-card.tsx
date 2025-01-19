@@ -27,10 +27,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { createClient } from "@/supabase/clients/createClient";
+import ExpandableText from "./expandable-text";
 
 const OrderCard = ({ order }: { order: Order }) => {
   const [cancelReason, setCancelReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
 
   const handleCancelOrder = async () => {
     setIsSubmitting(true);
@@ -59,6 +61,7 @@ const OrderCard = ({ order }: { order: Order }) => {
 
       if (notificationError) throw notificationError;
 
+      setIsAlertOpen(false);
       window.location.reload();
     } catch (error) {
       console.error("Error cancelling order:", error);
@@ -112,7 +115,6 @@ const OrderCard = ({ order }: { order: Order }) => {
   const StatusIcon = status.icon;
   const pictureUrl = order.merchandises.merchandise_pictures?.[0]?.picture_url;
 
-  // Check if the order can be cancelled
   const canCancel =
     order.merchandises.cancellable &&
     !order.order_statuses.cancelled &&
@@ -167,16 +169,12 @@ const OrderCard = ({ order }: { order: Order }) => {
           </div>
         </div>
 
-        {status.details && (
-          <p className="border-t border-gray-100 pt-3 text-sm italic text-gray-500">
-            {status.details}
-          </p>
-        )}
+        {/* {status.details && <ExpandableText text={status.details} />} */}
       </CardContent>
 
       {canCancel && (
         <CardFooter className="border-t border-gray-100">
-          <AlertDialog>
+          <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
             <AlertDialogTrigger asChild>
               <Button variant="destructive" className="w-full">
                 Cancel Order
@@ -197,7 +195,9 @@ const OrderCard = ({ order }: { order: Order }) => {
                 className="mt-2"
               />
               <AlertDialogFooter>
-                <AlertDialogCancel>Never mind</AlertDialogCancel>
+                <AlertDialogCancel onClick={() => setIsAlertOpen(false)}>
+                  Never mind
+                </AlertDialogCancel>
                 <AlertDialogAction
                   onClick={handleCancelOrder}
                   disabled={isSubmitting}

@@ -18,7 +18,7 @@ import ShopCard from "./shop-card";
 import ConfirmOrderDialog from "./confirm-order";
 import { createClient } from "@/supabase/clients/createClient";
 import { createWorker } from "tesseract.js";
-import OrderCountDisplay from "@/app/merch/[merchId]/orderCount";
+import OrderCountDisplay from "@/app/(app)/merch/[merchId]/orderCount";
 
 interface TransactionDetails {
   mobileNumber: string | null;
@@ -30,7 +30,7 @@ interface TransactionDetails {
 function extractTransactionDetails(text: string): TransactionDetails {
   // Extract mobile number (starts with +63)
   // const mobileNumberMatch = text.match(/\+63\s*\d{3}\s*\d{7}/);
-  const mobileNumberMatch = text.match(/\+63\s*\d{3}\s*\d{3}\s*\d{4}/);
+  const mobileNumberMatch = text.match(/\+63.*/);
   const mobileNumber = mobileNumberMatch ? mobileNumberMatch[0] : null;
 
   // Extract amount
@@ -294,7 +294,7 @@ const FullMerchDisplay = ({
         .insert([
           {
             order_id: data.id,
-            shop_id: order.shops.id,
+            shop_id: merch.shops.id,
             message: "You have a new order!",
             seen: false,
           },

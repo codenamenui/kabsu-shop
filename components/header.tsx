@@ -241,18 +241,6 @@ const Header = () => {
             </DropdownMenuContent>
           </DropdownMenu>
         </ul>
-        <form className="relative" onSubmit={handleSubmit}>
-          <button className="absolute left-2 top-2.5" type="submit">
-            <Search size={16} />
-          </button>
-          <Input
-            type="search"
-            placeholder="Search for a product..."
-            className="pl-8"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </form>
         <div className="flex">
           <Link href={"/notifications"}>
             <Button variant="ghost" size="icon" className="relative">
@@ -295,6 +283,18 @@ const Header = () => {
             </Button>
           )}
         </div>
+        <form className="relative" onSubmit={handleSubmit}>
+          <button className="absolute left-2 top-2.5" type="submit">
+            <Search size={16} />
+          </button>
+          <Input
+            type="search"
+            placeholder="Search for a product..."
+            className="pl-8"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </form>
       </nav>
     </header>
   );

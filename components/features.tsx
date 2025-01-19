@@ -116,11 +116,11 @@ const FeaturedProducts = () => {
   );
 
   return (
-    <section className="px-6 py-12">
+    <section className="flex flex-col items-center justify-center px-6 py-12">
       <h1 className="mb-8 text-center text-3xl font-bold text-emerald-800">
         Discover Products
       </h1>
-      <Tabs defaultValue="new" className="w-full">
+      <Tabs defaultValue="new" className="w-3/4">
         <TabsList className="mb-8 grid w-full grid-cols-3">
           <TabsTrigger value="new">New Arrivals</TabsTrigger>
           <TabsTrigger value="popular">Popular Items</TabsTrigger>

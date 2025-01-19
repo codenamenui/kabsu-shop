@@ -1,39 +1,58 @@
-import React from "react";
-import { Card } from "./ui/card";
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { createClient } from "@/supabase/clients/createClient";
+import { Merch, Shop, Category, FullShopInfo } from "@/constants/type";
+import SearchSidebar from "@/components/searchpage/sidebar";
+import ResultsDisplay from "@/components/searchpage/results";
+import { Card } from "@/components/ui/card";
+import { Search, Filter, ArrowUpDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import Image from "next/image";
-import { FullShopInfo } from "@/constants/type";
 import { FaFacebook } from "react-icons/fa";
 import { MdEmail } from "react-icons/md";
 
-const ShopDisplay = ({ shop }: { shop?: FullShopInfo | null }) => {
+const ShopDisplayCard = ({ shop }: { shop: FullShopInfo | null }) => {
+  if (!shop) return null;
+
   return (
-    <div className="flex">
-      <Card className="flex w-full items-center gap-3 p-3">
-        <Image
-          src={shop?.logo_url}
-          width={80}
-          height={80}
-          alt={""}
-          className="rounded-full"
-        />
-        <div className="text-xs">
-          <p className="text-lg font-semibold">{shop?.name}</p>
-          {/* <p className="text-zinc-600">{shop.acronym}</p> */}
-          <p>{shop?.colleges.name}</p>
-          <a href={shop?.socmed_url} target="_blank" rel="noopener">
-            <span className="flex gap-1">
-              <FaFacebook size={20} />
-              <p>{shop?.socmed_url}</p>
-            </span>
-          </a>
-          <span className="flex gap-1">
-            <MdEmail size={20} />
-            <p>{shop?.email}</p>
-          </span>
+    <Card className="mb-6 overflow-hidden">
+      <div className="flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:gap-8">
+        <div className="flex-shrink-0">
+          <Image
+            src={shop.logo_url}
+            width={100}
+            height={100}
+            alt={shop.name}
+            className="rounded-full object-cover"
+          />
         </div>
-      </Card>
-    </div>
+        <div className="space-y-3">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{shop.name}</h1>
+            <p className="text-sm text-gray-600">{shop.colleges?.name}</p>
+          </div>
+          <div className="space-y-2">
+            <a
+              href={shop.socmed_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
+            >
+              <FaFacebook className="h-4 w-4 text-blue-600" />
+              <span className="break-all">{shop.socmed_url}</span>
+            </a>
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <MdEmail className="h-4 w-4" />
+              <span>{shop.email}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Card>
   );
 };
 
-export default ShopDisplay;
+export default ShopDisplayCard;

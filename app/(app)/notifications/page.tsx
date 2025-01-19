@@ -141,9 +141,12 @@ const UserNotifications = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-[200px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
+      <Card className="flex h-full min-h-[500px] items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-primary"></div>
+          <p className="mt-4 text-sm text-gray-500">Loading notifications...</p>
+        </div>
+      </Card>
     );
   }
 

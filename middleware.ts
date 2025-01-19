@@ -24,6 +24,23 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single();
+
+  // If we're on the account page, allow access regardless
+  if (pathname.startsWith("/account")) {
+    return NextResponse.next();
+  }
+
+  // For all other pages, redirect to /account if there's no valid profile
+  if (profileError || !profile) {
+    url.pathname = "/account";
+    return NextResponse.redirect(url);
+  }
+
   if (pathname.startsWith("/merch")) {
     const merchId = pathname.split("/")[2]; // Extract shopId from URL
     const { data: merch } = await supabase

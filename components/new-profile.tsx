@@ -1,10 +1,12 @@
-import React from "react";
-import { createServerClient } from "@/supabase/clients/createServer";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import { College, Profile, Program } from "@/constants/type";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Toaster, toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -19,59 +21,80 @@ import {
   BookOpen,
   Users,
   BadgeCheck,
+  Loader2,
 } from "lucide-react";
+import { createClient } from "@/supabase/clients/createClient";
 
-const NewProfile = async () => {
-  const supabase = createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const { data: colleges } = await supabase
-    .from("colleges")
-    .select()
-    .returns<College[]>();
-  const { data: programs } = await supabase
-    .from("programs")
-    .select()
-    .returns<Program[]>();
-  const { data: profile } = (await supabase
-    .from("profiles")
-    .select()
-    .eq("id", user?.id)
-    .single()) as { data: Profile };
+const NewProfile = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [colleges, setColleges] = useState<College[]>([]);
+  const [programs, setPrograms] = useState<Program[]>([]);
 
-  const handleProfileSubmit = async (formData: FormData) => {
-    "use server";
+  useEffect(() => {
+    const fetchData = async () => {
+      const supabase = createClient();
 
-    const data = {
-      first_name: formData.get("first_name"),
-      last_name: formData.get("last_name"),
-      student_number: formData.get("student_number"),
-      contact_number: formData.get("contact_number"),
-      college_id: formData.get("college"),
-      program_id: formData.get("program"),
-      year: formData.get("year"),
-      section: formData.get("section"),
-      email: user?.email,
+      // Get user
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setUser(user);
+
+      // Get colleges
+      const { data: collegesData } = await supabase.from("colleges").select();
+      setColleges(collegesData || []);
+
+      // Get programs
+      const { data: programsData } = await supabase.from("programs").select();
+      setPrograms(programsData || []);
+
+      // Get profile
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select()
+        .eq("id", user.id)
+        .single();
+
+      setProfile(profileData);
     };
 
-    const supabase = createServerClient();
-    const {
-      data: { user: currentUser },
-      error: authError,
-    } = await supabase.auth.getUser();
+    fetchData();
+  }, []);
 
-    if (authError) {
-      console.error(authError);
-      return;
-    }
+  const handleProfileSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
 
-    if (profile) {
-      await supabase.from("profiles").update(data).eq("id", currentUser?.id);
-    } else {
-      await supabase
-        .from("profiles")
-        .insert([{ id: currentUser?.id, ...data }]);
+    try {
+      const formData = new FormData(e.currentTarget);
+      const data = {
+        first_name: formData.get("first_name"),
+        last_name: formData.get("last_name"),
+        student_number: formData.get("student_number"),
+        contact_number: formData.get("contact_number"),
+        college_id: formData.get("college"),
+        program_id: formData.get("program"),
+        year: formData.get("year"),
+        section: formData.get("section"),
+        email: user?.email,
+      };
+
+      const supabase = createClient();
+
+      if (profile) {
+        await supabase.from("profiles").update(data).eq("id", user?.id);
+      } else {
+        await supabase.from("profiles").insert([{ id: user?.id, ...data }]);
+      }
+
+      toast.success("Profile saved successfully!");
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      toast.error("Failed to save profile. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -86,7 +109,7 @@ const NewProfile = async () => {
           Complete your profile to access all features
         </p>
 
-        <form action={handleProfileSubmit} className="space-y-6">
+        <form onSubmit={handleProfileSubmit} className="space-y-6">
           {/* Personal Information */}
           <div className="space-y-4">
             <h3 className="flex items-center text-lg font-medium">
@@ -98,12 +121,18 @@ const NewProfile = async () => {
                 label="First Name"
                 name="first_name"
                 defaultValue={profile?.first_name || ""}
+                onChange={(e) =>
+                  setProfile({ ...profile, first_name: e.target.value })
+                }
                 placeholder="Enter your first name"
               />
               <FormField
                 label="Last Name"
                 name="last_name"
                 defaultValue={profile?.last_name || ""}
+                onChange={(e) =>
+                  setProfile({ ...profile, last_name: e.target.value })
+                }
                 placeholder="Enter your last name"
               />
             </div>
@@ -137,6 +166,10 @@ const NewProfile = async () => {
                 <Select
                   name="college"
                   defaultValue={profile?.college_id?.toString()}
+                  value={profile?.college_id?.toString()}
+                  onValueChange={(value) => {
+                    setProfile({ ...profile, college_id: parseInt(value) });
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select your college" />
@@ -158,6 +191,10 @@ const NewProfile = async () => {
                 <Select
                   name="program"
                   defaultValue={profile?.program_id?.toString()}
+                  value={profile?.program_id?.toString()}
+                  onValueChange={(value) => {
+                    setProfile({ ...profile, program_id: parseInt(value) });
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select your program" />
@@ -193,8 +230,15 @@ const NewProfile = async () => {
             </div>
           </div>
 
-          <Button type="submit" className="w-full">
-            Save Profile
+          <Button disabled={isLoading} type="submit" className="w-full">
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save Profile"
+            )}
           </Button>
         </form>
       </div>
