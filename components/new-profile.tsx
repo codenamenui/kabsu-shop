@@ -31,6 +31,7 @@ const NewProfile = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [colleges, setColleges] = useState<College[]>([]);
   const [programs, setPrograms] = useState<Program[]>([]);
+  const [hasProfile, setHasProfile] = useState();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -58,6 +59,7 @@ const NewProfile = () => {
         .single();
 
       setProfile(profileData);
+      setHasProfile(profileData ? true : false);
     };
 
     fetchData();
@@ -83,10 +85,20 @@ const NewProfile = () => {
 
       const supabase = createClient();
 
-      if (profile) {
-        await supabase.from("profiles").update(data).eq("id", user?.id);
+      if (hasProfile) {
+        const { error } = await supabase
+          .from("profiles")
+          .update(data)
+          .eq("id", user?.id);
+        console.log("DWAdwadwadwadDWA");
+        if (error) throw error;
       } else {
-        await supabase.from("profiles").insert([{ id: user?.id, ...data }]);
+        const { error } = await supabase
+          .from("profiles")
+          .insert([{ id: user?.id, ...data }]);
+        console.log("DWADWA");
+        if (error) throw error;
+        setHasProfile(true);
       }
 
       toast.success("Profile saved successfully!");
