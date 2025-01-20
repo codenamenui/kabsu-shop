@@ -15,11 +15,74 @@ import { BarChartComponent } from "@/components/bar-chart";
 import { PieChartComponent } from "@/components/pie-chart";
 import { createClient } from "@/supabase/clients/createClient";
 
-// Utility function to export data to CSV
-const exportToCSV = (data, filename) => {
-  // Format the data for CSV
-  console.log(data);
-  const csvData = data.map((item) => ({
+// Type definitions
+interface ShopOverview {
+  id: number;
+  name: string;
+  totalOrders: number;
+  totalRevenue: number;
+  pendingOrders: number;
+}
+
+interface OrderStatus {
+  status: string;
+  count: number;
+  totalRevenue: number;
+}
+
+interface TopSellingMerchandise {
+  order_id: number;
+  name: string;
+  totalQuantity: number;
+  totalRevenue: number;
+}
+
+interface CollegeOrderSummary {
+  collegeId: number;
+  collegeName: string;
+  totalOrders: number;
+  totalRevenue: number;
+}
+
+interface DashboardData {
+  shopOverview: ShopOverview[];
+  orderStatus: OrderStatus[];
+  topSellingMerchandise: TopSellingMerchandise[];
+  collegeOrderSummary: CollegeOrderSummary[];
+}
+
+// Stats card component for reusability
+interface StatsCardProps {
+  title: string;
+  description: string;
+  value: string | number;
+  trend: "up" | "neutral" | "down";
+}
+
+const StatsCard = ({ title, description, value, trend }: StatsCardProps) => (
+  <Card>
+    <CardHeader>
+      <CardTitle className="text-lg">{title}</CardTitle>
+      <CardDescription>{description}</CardDescription>
+    </CardHeader>
+    <CardContent className="flex items-center justify-between">
+      <span className="text-3xl font-bold">{value}</span>
+      <TrendingUp
+        className={
+          trend === "up"
+            ? "text-green-500"
+            : trend === "down"
+              ? "text-red-500"
+              : "text-yellow-500"
+        }
+      />
+    </CardContent>
+  </Card>
+);
+
+// Export function with proper typing
+const exportToCSV = async (orders: any[], filename: string) => {
+  const csvData = orders.map((item) => ({
     "ORDER ID": item.id,
     "ORDER DATE": item.created_at,
     "USER ID": item.profiles.id,
@@ -44,7 +107,6 @@ const exportToCSV = (data, filename) => {
     "CANCEL REASON": item.order_statuses.cancel_reason ?? "",
   }));
 
-  // Create CSV headers
   const headers = Object.keys(csvData[0]);
   const csvContent = [
     headers.join(","),
@@ -53,18 +115,15 @@ const exportToCSV = (data, filename) => {
     ),
   ].join("\n");
 
-  // Create and trigger download
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
-  if (link.download !== undefined) {
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", filename);
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
+  link.setAttribute("href", url);
+  link.setAttribute("download", filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 };
 
 export default function AdminDashboard({
@@ -72,12 +131,9 @@ export default function AdminDashboard({
 }: {
   params: { shopId: string };
 }) {
-  const [dashboardData, setDashboardData] = useState<{
-    shopOverview: any[];
-    orderStatus: any[];
-    topSellingMerchandise: any[];
-    collegeOrderSummary: any[];
-  }>();
+  const [dashboardData, setDashboardData] = useState<DashboardData>();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -86,141 +142,166 @@ export default function AdminDashboard({
         setDashboardData(data);
       } catch (error) {
         console.error("Failed to load dashboard data:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     loadDashboardData();
   }, [params.shopId]);
 
-  const handleExport = () => {
-    const exportData = async () => {
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
       const supabase = createClient();
-      const { data: orders, error } = await supabase
-        .from("orders")
-        .select(
-          "id, created_at, quantity, price, online_payment, profiles(id, first_name, last_name, email), merchandises(id, name), variants(id, name), order_statuses(received, paid, cancelled, cancelled_at, cancel_reason)",
-        );
-      if (error) {
-        console.error("Failed to fetch orders for export:", error);
-        return;
-      }
-      exportToCSV(
+      const { data: orders, error } = await supabase.from("orders").select(
+        `
+          id, created_at, quantity, price, online_payment,
+          profiles(id, first_name, last_name, email),
+          merchandises(id, name),
+          variants(id, name),
+          order_statuses(received, paid, cancelled, cancelled_at, cancel_reason)
+          `,
+      );
+
+      if (error) throw error;
+      if (!orders) throw new Error("No orders found");
+
+      await exportToCSV(
         orders,
         `sales-report-${new Date().toISOString().split("T")[0]}.csv`,
       );
-    };
-    exportData();
+    } catch (error) {
+      console.error("Failed to export orders:", error);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
-  if (!dashboardData) {
-    return <div>Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-lg">Loading dashboard data...</div>
+      </div>
+    );
   }
 
+  if (!dashboardData) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-lg text-red-500">
+          Failed to load dashboard data
+        </div>
+      </div>
+    );
+  }
+
+  const {
+    shopOverview,
+    orderStatus,
+    topSellingMerchandise,
+    collegeOrderSummary,
+  } = dashboardData;
+  const overview = shopOverview[0] || {
+    totalOrders: 0,
+    totalRevenue: 0,
+    pendingOrders: 0,
+  };
+
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="container mx-auto space-y-6 p-6">
+      <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-        <Button onClick={handleExport} className="flex items-center gap-2">
+        <Button
+          onClick={handleExport}
+          disabled={isExporting}
+          className="flex items-center gap-2"
+        >
           <Download className="h-4 w-4" />
-          Export to CSV
+          {isExporting ? "Exporting..." : "Export to CSV"}
         </Button>
       </div>
 
-      {/* Shop Overview Cards */}
-      <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>Total Orders</CardTitle>
-            <CardDescription>Shop Performance</CardDescription>
-          </CardHeader>
-          <CardContent className="flex items-center justify-between">
-            <span className="text-3xl font-bold">
-              {dashboardData.shopOverview[0]?.totalOrders || 0}
-            </span>
-            <TrendingUp className="text-green-500" />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Total Revenue</CardTitle>
-            <CardDescription>Sales Performance</CardDescription>
-          </CardHeader>
-          <CardContent className="flex items-center justify-between">
-            <span className="text-3xl font-bold">
-              ₱
-              {dashboardData.shopOverview[0]?.totalRevenue.toLocaleString() ||
-                0}
-            </span>
-            <TrendingUp className="text-green-500" />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Pending Orders</CardTitle>
-            <CardDescription>Awaiting Action</CardDescription>
-          </CardHeader>
-          <CardContent className="flex items-center justify-between">
-            <span className="text-3xl font-bold">
-              {dashboardData.shopOverview[0]?.pendingOrders || 0}
-            </span>
-            <TrendingUp className="text-yellow-500" />
-          </CardContent>
-        </Card>
+      {/* Overview Stats */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <StatsCard
+          title="Total Orders"
+          description="Shop Performance"
+          value={overview.totalOrders}
+          trend="up"
+        />
+        <StatsCard
+          title="Total Revenue"
+          description="Sales Performance"
+          value={`₱${overview.totalRevenue.toLocaleString()}`}
+          trend="up"
+        />
+        <StatsCard
+          title="Pending Orders"
+          description="Awaiting Action"
+          value={overview.pendingOrders}
+          trend="neutral"
+        />
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <BarChartComponent
-          orders={dashboardData.collegeOrderSummary.map((college) => ({
+          orders={collegeOrderSummary.map((college) => ({
             college: college.collegeName,
             orders: college.totalOrders,
           }))}
+          shopId={params.shopId}
         />
-
         <PieChartComponent
-          orders={dashboardData.orderStatus.map((status) => ({
+          orders={orderStatus.map((status) => ({
             status: status.status,
             quantities: status.count,
-            orders: status.totalOrders,
           }))}
-          count={dashboardData.collegeOrderSummary.map((college) => ({
-            college: college.collegeName,
-            orders: college.totalOrders,
-          }))}
+          shopId={params.shopId}
         />
       </div>
 
-      {/* Top Selling Merchandise Table */}
-      <Card className="mt-6">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Top Selling Merchandise</CardTitle>
-            <CardDescription>Best Performing Products</CardDescription>
-          </div>
+      {/* Top Selling Products */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Top Selling Merchandise</CardTitle>
+          <CardDescription>Best Performing Products</CardDescription>
         </CardHeader>
         <CardContent>
-          <table className="w-full">
-            <thead>
-              <tr className="border-b">
-                <th className="p-2 text-left">Product</th>
-                <th className="p-2 text-right">Total Quantity</th>
-                <th className="p-2 text-right">Total Revenue</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dashboardData.topSellingMerchandise.map((merch) => (
-                <tr key={merch.order_id} className="border-b">
-                  <td className="p-2">{merch.name}</td>
-                  <td className="p-2 text-right">{merch.totalQuantity}</td>
-                  <td className="p-2 text-right">
-                    ₱{merch.totalRevenue.toLocaleString()}
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="p-3 text-left font-medium text-muted-foreground">
+                    Product
+                  </th>
+                  <th className="p-3 text-right font-medium text-muted-foreground">
+                    Total Quantity
+                  </th>
+                  <th className="p-3 text-right font-medium text-muted-foreground">
+                    Total Revenue
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {topSellingMerchandise.map((merch) => (
+                  <tr
+                    key={merch.order_id}
+                    className="border-b hover:bg-muted/50"
+                  >
+                    <td className="p-3">{merch.name}</td>
+                    <td className="p-3 text-right">
+                      {merch.totalQuantity.toLocaleString()}
+                    </td>
+                    <td className="p-3 text-right">
+                      ₱{merch.totalRevenue.toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -15,6 +15,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { createClient } from "@/supabase/clients/createClient";
 
 const chartConfig = {
   visitors: {
@@ -42,7 +43,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function PieChartComponent({ orders, count }) {
+export function PieChartComponent({ orders, shopId }) {
   const [dateRange, setDateRange] = useState("");
 
   const statusColorMap = {
@@ -53,26 +54,35 @@ export function PieChartComponent({ orders, count }) {
   };
 
   useEffect(() => {
-    if (orders && orders.length > 0) {
-      // Get dates from orders
-      console.log(count);
-      const dates = orders.map((order) => new Date(count.created_at));
-      const earliestDate = new Date(Math.min(...dates));
-      const latestDate = new Date(Math.max(...dates));
+    const countOrders = async () => {
+      const supabase = createClient();
+      const { data: orders, error: orderStatusError } = await supabase
+        .from("orders")
+        .select(`created_at`)
+        .eq("shop_id", shopId);
+      if (orders && orders.length > 0) {
+        // Assuming each order has a 'date' field in ISO format
+        const dates = orders.map((order) => new Date(order.created_at));
 
-      // Format dates
-      const formatDate = (date) => {
-        return date.toLocaleDateString("en-US", {
-          month: "long",
-          year: "numeric",
-        });
-      };
+        const earliestDate = new Date(Math.min(...dates));
+        const latestDate = new Date(Math.max(...dates));
 
-      // Create date range string
-      const range = `${formatDate(earliestDate)} - ${formatDate(latestDate)}`;
-      if (range.startsWith("Invalid Date")) setDateRange("INVALID");
-      setDateRange(range);
-    }
+        // Format dates
+        const formatDate = (date) => {
+          return date.toLocaleDateString("en-US", {
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+          });
+        };
+
+        // Create date range string
+        const range = `${formatDate(earliestDate)} - ${formatDate(latestDate)}`;
+
+        setDateRange(range);
+      }
+    };
+    countOrders();
   }, [orders]);
 
   const chartData =
@@ -97,7 +107,7 @@ export function PieChartComponent({ orders, count }) {
       <CardHeader className="items-center pb-0">
         <CardTitle>Order Status</CardTitle>
         <CardDescription>
-          {dateRange == "INVALID" ? dateRange : "No orders found"}
+          {dateRange != "INVALID" ? dateRange : "No orders found"}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-1 pb-0">

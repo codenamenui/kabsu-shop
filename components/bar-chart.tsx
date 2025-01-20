@@ -1,5 +1,15 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
 import {
   Card,
   CardContent,
@@ -13,74 +23,128 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { createClient } from "@/supabase/clients/createClient";
 
 const chartConfig = {
   orders: {
-    label: "Orders",
+    label: "Total Orders",
     color: "hsl(var(--chart-1))",
   },
 } satisfies ChartConfig;
 
-export function BarChartComponent({ orders }) {
+type OrderData = {
+  college: string;
+  orders: number;
+};
+
+interface BarChartProps {
+  orders: OrderData[];
+  shopId: string;
+}
+
+export function BarChartComponent({ orders, shopId }: BarChartProps) {
   const [dateRange, setDateRange] = useState("");
 
   useEffect(() => {
-    if (orders && orders.length > 0) {
-      // Assuming each order has a 'date' field in ISO format
-      const dates = orders.map((order) => new Date(order.created_at));
-      const earliestDate = new Date(Math.min(...dates));
-      const latestDate = new Date(Math.max(...dates));
+    const countOrders = async () => {
+      const supabase = createClient();
+      const { data: orders, error: orderStatusError } = await supabase
+        .from("orders")
+        .select(`created_at`)
+        .eq("shop_id", shopId);
+      if (orders && orders.length > 0) {
+        // Assuming each order has a 'date' field in ISO format
+        const dates = orders.map((order) => new Date(order.created_at));
 
-      // Format dates
-      const formatDate = (date) => {
-        return date.toLocaleDateString("en-US", {
-          month: "long",
-          year: "numeric",
-        });
-      };
+        const earliestDate = new Date(Math.min(...dates));
+        const latestDate = new Date(Math.max(...dates));
+        console.log(earliestDate);
+        // Format dates
+        const formatDate = (date) => {
+          return date.toLocaleDateString("en-US", {
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+          });
+        };
 
-      // Create date range string
-      const range = `${formatDate(earliestDate)} - ${formatDate(latestDate)}`;
-      setDateRange(range);
-    }
+        // Create date range string
+        const range = `${formatDate(earliestDate)} - ${formatDate(latestDate)}`;
+
+        setDateRange(range);
+      }
+    };
+    countOrders();
   }, [orders]);
 
-  // Process data to group by college
-  const collegeData = orders?.reduce((acc, order) => {
-    const college = order.college;
-    if (!acc[college]) {
-      acc[college] = { college, orders: 0 };
-    }
-    acc[college].orders += 1;
-    return acc;
-  }, {});
+  // Sort data by number of orders descending
+  const sortedData = [...orders].sort((a, b) => b.orders - a.orders);
 
-  const chartData = Object.values(collegeData || {});
+  if (!orders || orders.length === 0) {
+    return (
+      <Card className="flex min-h-[400px] flex-col">
+        <CardHeader className="items-center">
+          <CardTitle>Orders per College</CardTitle>
+          <CardDescription>No orders found</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
 
   return (
     <Card className="flex flex-col">
       <CardHeader className="items-center pb-0">
-        <CardTitle>Orders per College</CardTitle>
-        <CardDescription>{dateRange || "No orders found"}</CardDescription>
+        <CardTitle>Orders Per College</CardTitle>
+        <CardDescription>
+          {dateRange != "INVALID" ? dateRange : "No orders found"}
+        </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="h-80">
         <ChartContainer config={chartConfig}>
-          <BarChart data={chartData}>
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="college"
-              tickLine={false}
-              tickMargin={10}
-              axisLine={false}
-            />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent hideLabel />}
-            />
-            <Bar dataKey="orders" fill="var(--color-orders)" radius={8} />
-          </BarChart>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={sortedData}
+              margin={{ top: 10, right: 10, bottom: 40, left: 10 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                className="stroke-muted"
+              />
+              <XAxis
+                dataKey="college"
+                tickLine={false}
+                axisLine={false}
+                angle={-45}
+                textAnchor="end"
+                height={60}
+                interval={0}
+                tick={{ fontSize: 12 }}
+                className="text-muted-foreground"
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(value) => value.toLocaleString()}
+                className="text-muted-foreground"
+                tick={{ fontSize: 12 }}
+              />
+              <ChartTooltip
+                cursor={{ fill: "hsl(var(--muted))" }}
+                content={<ChartTooltipContent />}
+              />
+              <Bar
+                dataKey="orders"
+                fill="hsl(var(--primary))"
+                radius={[4, 4, 0, 0]}
+                barSize={24}
+              />
+            </BarChart>
+          </ResponsiveContainer>
         </ChartContainer>
       </CardContent>
     </Card>
   );
 }
+
+export default BarChartComponent;
