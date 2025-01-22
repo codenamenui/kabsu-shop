@@ -42,7 +42,7 @@ const SearchPage = () => {
     filteredResults = merchandises.filter((item) => {
       return item.name.toLowerCase().includes(query?.toLowerCase() ?? "");
     });
-
+    console.log(filteredResults);
     if (categories.length > 0) {
       filteredResults = filteredResults.filter((item) => {
         return item.merchandise_categories?.some((category) =>

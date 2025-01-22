@@ -101,7 +101,7 @@ export function BarChartComponent({ orders, shopId }: BarChartProps) {
       </CardHeader>
       <CardContent className="h-80">
         <ChartContainer config={chartConfig}>
-          <ResponsiveContainer width="100%" height="100%">
+         b <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={sortedData}
               margin={{ top: 10, right: 10, bottom: 40, left: 10 }}
