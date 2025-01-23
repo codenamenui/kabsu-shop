@@ -31,7 +31,9 @@ const NewProfile = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [colleges, setColleges] = useState<College[]>([]);
   const [programs, setPrograms] = useState<Program[]>([]);
-  const [hasProfile, setHasProfile] = useState();
+  const [hasProfile, setHasProfile] = useState(false);
+  const [filteredPrograms, setFilteredPrograms] = useState<Program[]>([]);
+  const [switched, setSwitched] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -58,12 +60,51 @@ const NewProfile = () => {
         .eq("id", user.id)
         .single();
 
-      setProfile(profileData);
-      setHasProfile(profileData ? true : false);
+      // Explicitly convert numeric fields to numbers
+      const processedProfileData = profileData
+        ? {
+            ...profileData,
+            college_id: Number(profileData.college_id),
+            program_id: Number(profileData.program_id),
+            year: Number(profileData.year),
+            section: Number(profileData.section),
+          }
+        : null;
+
+      setProfile(processedProfileData);
+      setHasProfile(!!processedProfileData);
+
+      // If profile exists, filter programs for the existing college
+      if (processedProfileData?.college_id) {
+        const collegePrograms =
+          programsData?.filter(
+            (program) => program.college_id === processedProfileData.college_id,
+          ) || [];
+        setFilteredPrograms(collegePrograms);
+      }
     };
 
     fetchData();
   }, []);
+
+  const handleCollegeChange = (value: string) => {
+    const selectedCollegeId = Number(value);
+
+    // Filter programs based on selected college
+    const collegePrograms = programs.filter(
+      (program) => program.college_id === selectedCollegeId,
+    );
+
+    // Update profile and filtered programs
+    setProfile((prev) => ({
+      ...prev,
+      college_id: selectedCollegeId,
+    }));
+    if (switched == false) {
+      setSwitched(true);
+    }
+    setFilteredPrograms(collegePrograms);
+  };
 
   const handleProfileSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -90,13 +131,13 @@ const NewProfile = () => {
           .from("profiles")
           .update(data)
           .eq("id", user?.id);
-        console.log("DWAdwadwadwadDWA");
+
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("profiles")
           .insert([{ id: user?.id, ...data }]);
-        console.log("DWADWA");
+
         if (error) throw error;
         setHasProfile(true);
       }
@@ -172,16 +213,14 @@ const NewProfile = () => {
               <BookOpen className="mr-2 h-5 w-5 text-primary" />
               Academic Information
             </h3>
+
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>College</Label>
                 <Select
                   name="college"
-                  defaultValue={profile?.college_id?.toString()}
-                  value={profile?.college_id?.toString()}
-                  onValueChange={(value) => {
-                    setProfile({ ...profile, college_id: parseInt(value) });
-                  }}
+                  value={profile?.college_id?.toString() ?? "-1"}
+                  onValueChange={handleCollegeChange}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select your college" />
@@ -198,21 +237,28 @@ const NewProfile = () => {
                   </SelectContent>
                 </Select>
               </div>
+
               <div className="space-y-2">
                 <Label>Program</Label>
                 <Select
                   name="program"
-                  defaultValue={profile?.program_id?.toString()}
-                  value={profile?.program_id?.toString()}
+                  value={profile?.program_id?.toString() ?? "-1"}
                   onValueChange={(value) => {
-                    setProfile({ ...profile, program_id: parseInt(value) });
+                    if (switched == true) {
+                      setSwitched(false);
+                    }
+                    setProfile((prev) => ({
+                      ...prev,
+                      program_id: Number(value),
+                    }));
                   }}
+                  disabled={!profile?.college_id}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select your program" />
                   </SelectTrigger>
                   <SelectContent>
-                    {programs?.map((program) => (
+                    {filteredPrograms?.map((program) => (
                       <SelectItem
                         key={program.id}
                         value={program.id.toString()}
@@ -242,7 +288,11 @@ const NewProfile = () => {
             </div>
           </div>
 
-          <Button disabled={isLoading} type="submit" className="w-full">
+          <Button
+            disabled={isLoading || switched}
+            type="submit"
+            className="w-full"
+          >
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
