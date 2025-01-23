@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/supabase/clients/createClient";
 import { toast } from "sonner";
-import { BadgeCheck, Building2, Upload } from "lucide-react";
+import { BadgeCheck, Building2, Upload, UserPlus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 interface ShopFormData {
   name: string;
@@ -24,6 +32,7 @@ interface ShopFormData {
   collegeId: string;
   socmedUrl: string;
   logoFile: File | null;
+  initialOfficerEmail?: string;
 }
 
 interface College {
@@ -39,11 +48,13 @@ const AddShopPage: React.FC = () => {
     collegeId: "",
     socmedUrl: "",
     logoFile: null,
+    initialOfficerEmail: "",
   });
 
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [colleges, setColleges] = useState<College[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
   const router = useRouter();
 
   // Fetch colleges on component mount
@@ -104,6 +115,27 @@ const AddShopPage: React.FC = () => {
         setLogoPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleOfficerSearch = async (searchEmail: string) => {
+    if (!searchEmail) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, first_name, last_name, email")
+        .ilike("email", `${searchEmail}%`)
+        .limit(5);
+
+      if (error) throw error;
+      setSearchResults(data ?? []);
+    } catch (error) {
+      console.error("Search error:", error);
     }
   };
 
@@ -168,7 +200,7 @@ const AddShopPage: React.FC = () => {
       } = supabase.storage.from("shop-picture").getPublicUrl(filePath);
 
       // Insert shop data
-      const { data, error } = await supabase
+      const { data: shopData, error: shopError } = await supabase
         .from("shops")
         .insert({
           name: formData.name,
@@ -180,8 +212,30 @@ const AddShopPage: React.FC = () => {
         })
         .select();
 
-      if (error) {
-        throw error;
+      if (shopError) {
+        throw shopError;
+      }
+
+      // If an initial officer email is provided, add the officer
+      if (formData.initialOfficerEmail) {
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("email", formData.initialOfficerEmail)
+          .single();
+
+        if (profileError) {
+          throw profileError;
+        }
+
+        const { error: officerError } = await supabase.from("officers").insert({
+          shop_id: shopData[0].id,
+          user_id: profileData.id,
+        });
+
+        if (officerError) {
+          throw officerError;
+        }
       }
 
       toast.success("Shop added successfully!");
@@ -324,6 +378,82 @@ const AddShopPage: React.FC = () => {
                 )}
               </div>
 
+              {/* New Optional Officer Section */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Initial Officer (Optional)</Label>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="flex items-center gap-2"
+                      >
+                        <UserPlus className="h-4 w-4" />
+                        Add Officer
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Add Initial Officer</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <Input
+                          placeholder="Search by email..."
+                          value={formData.initialOfficerEmail || ""}
+                          onChange={(e) => {
+                            handleOfficerSearch(e.target.value);
+                            handleInputChange({
+                              target: {
+                                name: "initialOfficerEmail",
+                                value: e.target.value,
+                              },
+                            } as any);
+                          }}
+                        />
+                        {searchResults.length > 0 && (
+                          <div className="mt-2 rounded-md border bg-white">
+                            {searchResults.map((result) => (
+                              <button
+                                key={result.id}
+                                type="button"
+                                className="w-full px-4 py-2 text-left hover:bg-gray-50"
+                                onClick={() => {
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    initialOfficerEmail: result.email,
+                                  }));
+                                  setSearchResults([]);
+                                }}
+                              >
+                                {result.first_name} {result.last_name} (
+                                {result.email})
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {formData.initialOfficerEmail && (
+                          <div className="mt-2 rounded-md bg-green-50 p-2">
+                            <p className="text-sm text-green-700">
+                              Initial Officer: {formData.initialOfficerEmail}
+                            </p>
+                          </div>
+                        )}
+                        <DialogClose asChild>
+                          <Button variant="outline" className="w-full">
+                            Close
+                          </Button>
+                        </DialogClose>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+                {formData.initialOfficerEmail && (
+                  <p className="text-sm text-muted-foreground">
+                    An officer will be added to this shop upon creation
+                  </p>
+                )}
+              </div>
               <div className="flex items-center justify-end space-x-4">
                 <Button
                   type="button"
