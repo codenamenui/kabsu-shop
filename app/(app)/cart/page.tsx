@@ -18,6 +18,7 @@ import CartShopDisplay from "@/components/cart-shop-display";
 import { createWorker } from "tesseract.js";
 import { ShoppingCart, Package, AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import CartOrderConfirmation from "./GroupedCart";
 
 // Keep all the existing interfaces and helper functions exactly the same
 interface TransactionDetails {
@@ -58,10 +59,9 @@ const Cart = () => {
   const [errMsg, setErrMsg] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
-  // Keep all the existing useEffect and handlers exactly the same
   useEffect(() => {
     const getData = async () => {
-      setIsLoading(true); // Set loading state when fetching
+      setIsLoading(true);
       const supabase = createClient();
       const {
         data: { user },
@@ -84,7 +84,7 @@ const Cart = () => {
         cart?.sort((a, b) => a.shops.acronym.localeCompare(b.shops.acronym)) ??
           [],
       );
-      setIsLoading(false); // Clear loading state after data is fetched
+      setIsLoading(false);
     };
     getData();
   }, []);
@@ -100,14 +100,31 @@ const Cart = () => {
   };
 
   const paymentUpdate = (
-    orderId: string,
+    shopId: string,
     paymentOption: string,
     paymentReceipt?: File,
   ) => {
-    setOrderPayments((prev) => ({
-      ...prev,
-      [orderId]: { paymentOption, paymentReceipt },
-    }));
+    setOrderPayments((prev) => {
+      // Find all orders for the given shop
+      const shopOrders = cart.filter(
+        (order) => order.shops.id.toString() === shopId,
+      );
+
+      // Create a new payment object for all these orders
+      const shopOrderPayments = shopOrders.reduce((acc, order) => {
+        acc[order.id.toString()] = {
+          paymentOption,
+          paymentReceipt,
+        };
+        return acc;
+      }, {});
+
+      // Merge with existing payments
+      return {
+        ...prev,
+        ...shopOrderPayments,
+      };
+    });
   };
 
   const submitOrder = async (
@@ -443,18 +460,12 @@ const Cart = () => {
                           </DialogTitle>
                         </DialogHeader>
                         <div className="space-y-6">
-                          {selectedOrders?.map((id) => {
-                            const order = cart.find(
-                              (o) => o.id.toString() === id,
-                            );
-                            return (
-                              <CartOrderConfirmCard
-                                key={id}
-                                order={order}
-                                paymentUpdate={paymentUpdate}
-                              />
-                            );
-                          })}
+                          <CartOrderConfirmation
+                            cart={cart}
+                            selectedOrders={selectedOrders}
+                            paymentUpdate={paymentUpdate}
+                            handleOrderSubmit={handleOrderSubmit}
+                          />
                         </div>
                         {errMsg && (
                           <div className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-800">
