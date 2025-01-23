@@ -181,7 +181,7 @@ const ModifyMerch: React.FC<MerchFormProps> = ({
             physical_payment: formData.physical_payment,
             cancellable: formData.cancellable,
             receiving_information: formData.receiving_information,
-            variant_name: formData.variant_name, // Add variant_name to update
+            variant_name: formData.variant_name,
           })
           .eq("id", merch.id)
           .select();
@@ -191,7 +191,6 @@ const ModifyMerch: React.FC<MerchFormProps> = ({
 
         // Handle merchandise categories update
         if (formData.merchandise_categories?.[0]?.cat_id) {
-          // First check if category exists
           const { data: existingCategory } = await supabase
             .from("merchandise_categories")
             .select()
@@ -199,7 +198,6 @@ const ModifyMerch: React.FC<MerchFormProps> = ({
             .single();
 
           if (existingCategory) {
-            // Update existing category
             const { error: categoryUpdateError } = await supabase
               .from("merchandise_categories")
               .update({
@@ -209,7 +207,6 @@ const ModifyMerch: React.FC<MerchFormProps> = ({
 
             if (categoryUpdateError) throw categoryUpdateError;
           } else {
-            // Insert new category
             const { error: categoryInsertError } = await supabase
               .from("merchandise_categories")
               .insert({
@@ -218,6 +215,73 @@ const ModifyMerch: React.FC<MerchFormProps> = ({
               });
 
             if (categoryInsertError) throw categoryInsertError;
+          }
+        }
+
+        // Handle variants update for existing merchandise
+        if (formData.variants && formData.variants.length > 0) {
+          // Fetch existing variants
+          const { data: existingVariants, error: fetchVariantsError } =
+            await supabase
+              .from("variants")
+              .select()
+              .eq("merch_id", merchandiseId);
+
+          if (fetchVariantsError) throw fetchVariantsError;
+
+          // Delete variants that are no longer in the form data
+          const variantsToDelete = existingVariants?.filter(
+            (existingVariant) =>
+              !formData.variants?.some(
+                (formVariant) => formVariant.name === existingVariant.name,
+              ),
+          );
+
+          if (variantsToDelete && variantsToDelete.length > 0) {
+            const { error: deleteVariantsError } = await supabase
+              .from("variants")
+              .delete()
+              .in(
+                "id",
+                variantsToDelete.map((v) => v.id),
+              );
+
+            if (deleteVariantsError) throw deleteVariantsError;
+          }
+
+          // Update or insert variants
+          for (const variant of formData.variants) {
+            const existingVariant = existingVariants?.find(
+              (v) => v.name === variant.name,
+            );
+
+            if (existingVariant) {
+              // Update existing variant
+              const { error: updateVariantError } = await supabase
+                .from("variants")
+                .update({
+                  name: variant.name,
+                  original_price: Math.round(variant.original_price), // Convert to cents
+                  membership_price: Math.round(variant.membership_price), // Convert to cents
+                  picture_url: variant.picture_url || "", // Use existing picture or empty string
+                })
+                .eq("id", existingVariant.id);
+
+              if (updateVariantError) throw updateVariantError;
+            } else {
+              // Insert new variant
+              const { error: insertVariantError } = await supabase
+                .from("variants")
+                .insert({
+                  merch_id: merchandiseId,
+                  name: variant.name,
+                  original_price: Math.round(variant.original_price), // Convert to cents
+                  membership_price: Math.round(variant.membership_price), // Convert to cents
+                  picture_url: variant.picture_url || "", // Optional picture URL
+                });
+
+              if (insertVariantError) throw insertVariantError;
+            }
           }
         }
       } else {
@@ -252,9 +316,27 @@ const ModifyMerch: React.FC<MerchFormProps> = ({
 
           if (categoryError) throw categoryError;
         }
+
+        // Insert variants for new merchandise
+        if (formData.variants && formData.variants.length > 0) {
+          const variantsToInsert = formData.variants.map((variant) => ({
+            merch_id: merchandiseId,
+            name: variant.name,
+            original_price: Math.round(variant.original_price), // Convert to cents
+            membership_price: Math.round(variant.membership_price), // Convert to cents
+            picture_url: variant.picture_url || "", // Optional picture URL
+          }));
+
+          const { error: variantInsertError } = await supabase
+            .from("variants")
+            .insert(variantsToInsert);
+
+          if (variantInsertError) throw variantInsertError;
+        }
       }
 
-      // Rest of the code (handleMerchandisePictures, variants handling, etc.) remains the same
+      // Handle merchandise pictures
+      await handleMerchandisePictures(supabase, merchandiseId, formData);
 
       toast.success("Merchandise saved successfully");
       router.push(`/manage-shop/${shopId}`);
