@@ -169,7 +169,7 @@ const Header = () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `https://kabsu-shop-kwcw918zb-codenamenuis-projects.vercel.app/api/auth/callback`,
+        redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/callback`,
       },
     });
   };

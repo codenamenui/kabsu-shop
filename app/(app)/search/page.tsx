@@ -173,9 +173,7 @@ const SearchPage = () => {
 
   const inShopPage = (): boolean => {
     const currentUrl = usePathname();
-    return currentUrl.startsWith(
-      `https://kabsu-shop-kwcw918zb-codenamenuis-projects.vercel.app/shop`,
-    );
+    return currentUrl.startsWith(`${process.env.NEXT_PUBLIC_BASE_URL}/shop`);
   };
 
   const clearAllFilters = () => {
