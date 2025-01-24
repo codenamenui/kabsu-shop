@@ -58,7 +58,9 @@ const ShopOrderConfirmCard = ({
 }) => {
   const [membership, setMembership] = useState<boolean>(false);
   const [paymentOption, setPaymentOption] = useState<string>("none");
-  const [paymentReceipt, setPaymentReceipt] = useState<File | null>(null);
+  const [paymentReceipt, setPaymentReceipt] = useState<File | undefined>(
+    undefined,
+  );
 
   useEffect(() => {
     const getStatus = async () => {
@@ -214,7 +216,7 @@ const ShopOrderConfirmCard = ({
                     className="sr-only"
                     accept="image/jpeg,image/png,image/gif"
                     onChange={(e) => {
-                      const file = e.target.files?.[0] || null;
+                      const file = e.target.files?.[0] || undefined;
                       setPaymentReceipt(file);
                       paymentUpdate(
                         shopOrders.shop.id.toString(),
