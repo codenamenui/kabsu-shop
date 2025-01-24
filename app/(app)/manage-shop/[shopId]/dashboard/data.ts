@@ -1,8 +1,40 @@
 "use client";
 
 import { createClient } from "@/supabase/clients/createClient";
+type OrderStatuses = {
+  paid?: boolean | null;
+  received?: boolean | null;
+  cancelled?: boolean | null;
+};
 
-// Type definitions for dashboard data
+type Shop = {
+  id: number;
+  name: string;
+  orders: Array<{
+    id: number;
+    price: number;
+    order_statuses?: OrderStatuses;
+  }>;
+};
+
+type Order = {
+  price: number;
+  created_at: string;
+  order_statuses?: OrderStatuses;
+  shop_id?: number;
+  merchandises?: {
+    id: number;
+    name: string;
+  };
+  quantity: number;
+  profiles?: {
+    colleges?: {
+      id: number;
+      name: string;
+    };
+  };
+};
+
 type ShopOverview = {
   id: number;
   name: string;
@@ -18,6 +50,7 @@ type OrderStatus = {
 };
 
 type TopSellingMerchandise = {
+  order_id: number;
   id: number;
   name: string;
   totalQuantity: number;
@@ -30,7 +63,6 @@ type CollegeOrderSummary = {
   totalOrders: number;
   totalRevenue: number;
 };
-
 export async function fetchAdminDashboardData(shopId?: number) {
   const supabase = createClient();
 
@@ -52,7 +84,22 @@ export async function fetchAdminDashboardData(shopId?: number) {
       )
     `,
     )
-    .eq("id", shopId);
+    .eq("id", shopId)
+    .returns<
+      {
+        id;
+        name;
+        orders: {
+          id;
+          price;
+          order_statuses: {
+            paid;
+            received;
+            cancelled;
+          };
+        }[];
+      }[]
+    >();
 
   // Order Status Summary
   const { data: orderStatusData, error: orderStatusError } = await supabase
@@ -69,7 +116,18 @@ export async function fetchAdminDashboardData(shopId?: number) {
       
     `,
     )
-    .eq("shop_id", shopId);
+    .eq("shop_id", shopId)
+    .returns<
+      {
+        price;
+        created_at;
+        order_statuses: {
+          paid;
+          received;
+          cancelled;
+        };
+      }[]
+    >();
 
   // Top Selling Merchandise
   const { data: topSellingData, error: topSellingError } = await supabase
@@ -87,7 +145,8 @@ export async function fetchAdminDashboardData(shopId?: number) {
     )
     .eq("shop_id", shopId)
     .order("quantity", { ascending: false })
-    .limit(5);
+    .limit(5)
+    .returns<{ id; merchandises: { id; name }; quantity; price }[]>();
 
   // College Order Summary
   const { data: collegeOrderData, error: collegeOrderError } = await supabase
@@ -104,7 +163,8 @@ export async function fetchAdminDashboardData(shopId?: number) {
       )
     `,
     )
-    .eq("shop_id", shopId);
+    .eq("shop_id", shopId)
+    .returns<{ price; quantity; profiles: { colleges: { id; name } } }[]>();
 
   // Process and transform data
   const shopOverview: ShopOverview[] =

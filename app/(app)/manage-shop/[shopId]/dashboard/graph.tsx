@@ -46,12 +46,6 @@ const Dashboard = ({ ini }: { ini: Orders }) => {
     return acc;
   }, {});
 
-  const ordersPerCategory = orders.reduce((acc, order) => {
-    const category = order.merchandises.category || "Uncategorized";
-    acc[category] = (acc[category] || 0) + order.quantity;
-    return acc;
-  }, {});
-
   const orderStatuses = {
     pending: orders.filter(
       (order) =>

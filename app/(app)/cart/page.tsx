@@ -178,7 +178,7 @@ const Cart = () => {
           {
             user_id: user?.id,
             quantity: order.quantity,
-            online_payment: paymentOption == "online",
+            online_payment: paymentOption != "irl",
             physical_payment: paymentOption == "irl",
             variant_id: order.variant_id,
             merch_id: order.merchandises.id,

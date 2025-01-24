@@ -5,6 +5,7 @@ import { BarChartComponent } from "@/components/bar-chart";
 import { PieChartComponent } from "@/components/pie-chart";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { createClient } from "@/supabase/clients/createClient";
+import React from "react";
 import { useEffect, useState } from "react";
 
 function groupOrders(orders) {
@@ -191,7 +192,6 @@ const Dashboard = ({ params }: { params: { shopId: string } }) => {
   useEffect(() => {
     const getData = async () => {
       const orders = await processOrders(params.shopId);
-      console.log(orders?.byOrderStatus);
       setOrders(orders);
     };
     getData();
@@ -206,7 +206,10 @@ const Dashboard = ({ params }: { params: { shopId: string } }) => {
             <BarChartComponent orders={orders?.byCollege} />
           </div>
           <div>
-            <PieChartComponent orders={orders?.byOrderStatus} />
+            <PieChartComponent
+              orders={orders?.byOrderStatus}
+              shopId={params.shopId}
+            />
           </div>
         </div>
       </div>
