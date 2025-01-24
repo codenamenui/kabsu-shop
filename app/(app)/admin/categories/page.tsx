@@ -102,10 +102,7 @@ const AddCategoryPage: React.FC = () => {
 
       const {
         data: { publicUrl },
-        error: urlError,
       } = supabase.storage.from("category-picture").getPublicUrl(filePath);
-
-      if (urlError) throw urlError;
 
       const { data, error } = await supabase
         .from("categories")
