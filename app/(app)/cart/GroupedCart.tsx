@@ -1,13 +1,15 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect, Dispatch, SetStateAction } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { CreditCard, Upload, Wallet, AlertCircle } from "lucide-react";
 import Image from "next/image";
 import { createClient } from "@/supabase/clients/createClient";
 import { CartOrder } from "@/constants/type";
 
-// Group orders by shop
-const groupOrdersByShop = (cart: CartOrder[]) => {
+// Group orders by shop (now synchronous)
+const groupOrdersByShop = (
+  cart: CartOrder[],
+  shopMemberships: Record<string, boolean>,
+) => {
   return cart.reduce(
     (acc, order) => {
       const shopId = order.shops.id;
@@ -24,8 +26,14 @@ const groupOrdersByShop = (cart: CartOrder[]) => {
       const variant = order.merchandises.variants.find(
         (v) => v.id === order.variant_id,
       );
+
       if (variant) {
-        acc[shopId].totalPrice += variant.original_price * order.quantity;
+        // Determine price based on shop-specific membership status
+        const price = shopMemberships[shopId]
+          ? variant.membership_price || variant.original_price
+          : variant.original_price;
+
+        acc[shopId].totalPrice += price * order.quantity;
       }
 
       return acc;
@@ -44,6 +52,7 @@ const groupOrdersByShop = (cart: CartOrder[]) => {
 const ShopOrderConfirmCard = ({
   shopOrders,
   paymentUpdate,
+  setShopPrice,
 }: {
   shopOrders: {
     shop: CartOrder["shops"];
@@ -55,6 +64,7 @@ const ShopOrderConfirmCard = ({
     paymentOption: string,
     paymentReceipt?: File,
   ) => void;
+  setShopPrice: Dispatch<SetStateAction<{}>>;
 }) => {
   const [membership, setMembership] = useState<boolean>(false);
   const [paymentOption, setPaymentOption] = useState<string>("none");
@@ -69,16 +79,17 @@ const ShopOrderConfirmCard = ({
         data: { user },
       } = await supabase.auth.getUser();
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("memberships")
         .select()
-        .eq("user_id", user?.id)
-        .eq("shop_id", shopOrders.shop.id);
-
-      setMembership(error != null);
+        .eq("email", user?.email)
+        .eq("shop_id", shopOrders.shop.id)
+        .single();
+      console.log(error);
+      setMembership(!!data);
     };
     getStatus();
-  }, [shopOrders.shop.id]);
+  }, [shopOrders.shop]);
 
   const displayTotalPrice = new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -86,6 +97,13 @@ const ShopOrderConfirmCard = ({
     maximumFractionDigits: 0,
     minimumFractionDigits: 0,
   }).format(shopOrders.totalPrice);
+
+  useEffect(() => {
+    setShopPrice((prev) => ({
+      ...prev,
+      [shopOrders.shop.id]: displayTotalPrice,
+    }));
+  }, [displayTotalPrice]);
 
   // Check if all shop orders support online/physical payment
   const supportsPhysicalPayment = shopOrders.orders.every(
@@ -108,36 +126,80 @@ const ShopOrderConfirmCard = ({
       </div>
 
       {/* Orders for this Shop */}
-      {shopOrders.orders.map((order) => (
-        <Card key={order.id}>
-          <CardContent className="pt-6">
-            <div className="flex gap-4">
-              <div className="relative h-32 w-32">
-                <Image
-                  src={order.merchandises.merchandise_pictures[0].picture_url}
-                  alt={order.merchandises.name}
-                  fill
-                  className="rounded-lg object-cover"
-                />
-              </div>
-              <div className="flex-1 space-y-2">
-                <h3 className="text-lg font-bold">{order.merchandises.name}</h3>
-                <div className="text-sm text-gray-600">
-                  <p>
-                    {order.merchandises.variant_name}:
-                    {
-                      order.merchandises.variants.find(
-                        (v) => v.id === order.variant_id,
-                      )?.name
-                    }
-                  </p>
-                  <p>Quantity: {order.quantity}</p>
+      {shopOrders.orders.map((order) => {
+        // Find the specific variant for this order
+        const variant = order.merchandises.variants.find(
+          (v) => v.id === order.variant_id,
+        );
+
+        // Determine pricing
+        const isShopMember = membership; // Using the membership state from parent component
+        const displayPrice =
+          isShopMember && variant?.membership_price
+            ? variant.membership_price
+            : variant?.original_price;
+
+        // Format price
+        const priceFormatter = new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "PHP",
+          maximumFractionDigits: 0,
+          minimumFractionDigits: 0,
+        });
+
+        return (
+          <Card key={order.id}>
+            <CardContent className="pt-6">
+              <div className="flex gap-4">
+                <div className="relative h-32 w-32">
+                  <Image
+                    src={order.merchandises.merchandise_pictures[0].picture_url}
+                    alt={order.merchandises.name}
+                    fill
+                    className="rounded-lg object-cover"
+                  />
+                </div>
+                <div className="flex-1 space-y-2">
+                  <h3 className="text-lg font-bold">
+                    {order.merchandises.name}
+                  </h3>
+                  <div className="text-sm text-gray-600">
+                    <p>
+                      {order.merchandises.variant_name}:
+                      {
+                        order.merchandises.variants.find(
+                          (v) => v.id === order.variant_id,
+                        )?.name
+                      }
+                    </p>
+                    <p>Quantity: {order.quantity}</p>
+                    <div className="flex items-center gap-2">
+                      <span>Price:</span>
+                      {variant?.membership_price && isShopMember ? (
+                        <div className="flex items-center gap-2">
+                          <div className="text-gray-400 line-through">
+                            {priceFormatter.format(variant.original_price)}
+                          </div>
+                          <div className="font-semibold text-primary">
+                            {priceFormatter.format(variant.membership_price)}
+                          </div>
+                          <div className="text-semibold text-green-600">
+                            (Member Price)
+                          </div>
+                        </div>
+                      ) : (
+                        <span>
+                          {priceFormatter.format(variant?.original_price || 0)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+            </CardContent>
+          </Card>
+        );
+      })}
 
       {/* Total Price */}
       <div className="text-right text-xl font-bold">
@@ -252,8 +314,8 @@ const CartOrderConfirmation = ({
   cart,
   selectedOrders,
   paymentUpdate,
-  handleOrderSubmit,
   errMsg,
+  setShopPrice,
 }: {
   cart: CartOrder[];
   selectedOrders: string[];
@@ -262,14 +324,63 @@ const CartOrderConfirmation = ({
     paymentOption: string,
     paymentReceipt?: File,
   ) => void;
-  handleOrderSubmit: () => void;
   errMsg?: string;
+  setShopPrice: Dispatch<SetStateAction<{}>>;
 }) => {
+  const [shopMemberships, setShopMemberships] = useState<
+    Record<string, boolean>
+  >({});
+
+  useEffect(() => {
+    const fetchMemberships = async () => {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      // Get unique shop IDs from selected orders
+      const uniqueShopIds = [
+        ...new Set(
+          cart
+            .filter((order) => selectedOrders.includes(order.id.toString()))
+            .map((order) => order.shops.id),
+        ),
+      ];
+
+      // Fetch memberships for these shops
+      const membershipPromises = uniqueShopIds.map((shopId) =>
+        supabase
+          .from("memberships")
+          .select()
+          .eq("email", user?.email)
+          .eq("shop_id", shopId)
+          .single(),
+      );
+
+      const membershipResults = await Promise.all(membershipPromises);
+
+      // Create membership status map
+      const memberships = uniqueShopIds.reduce(
+        (acc, shopId, index) => {
+          acc[shopId] = !!membershipResults[index].data;
+          return acc;
+        },
+        {} as Record<string, boolean>,
+      );
+
+      setShopMemberships(memberships);
+    };
+
+    fetchMemberships();
+  }, [cart, selectedOrders]);
+
   // Filter and group selected orders
   const filteredCart = cart.filter((order) =>
     selectedOrders.includes(order.id.toString()),
   );
-  const groupedOrders = groupOrdersByShop(filteredCart);
+
+  // Use the synchronous groupOrdersByShop function with memberships
+  const groupedOrders = groupOrdersByShop(filteredCart, shopMemberships);
 
   return (
     <div className="space-y-6">
@@ -278,6 +389,7 @@ const CartOrderConfirmation = ({
           key={shopOrders.shop.id}
           shopOrders={shopOrders}
           paymentUpdate={paymentUpdate}
+          setShopPrice={setShopPrice}
         />
       ))}
 
@@ -287,25 +399,6 @@ const CartOrderConfirmation = ({
           {errMsg}
         </div>
       )}
-
-      <Button
-        onClick={handleOrderSubmit}
-        // disabled={Object.values(groupedOrders).some((shopOrders) => {
-        //   // Check if any shop lacks a payment option
-        //   const shopId = shopOrders.shop.id.toString();
-        //   const payment = orderPayments[shopId];
-        //   return (
-        //     !payment ||
-        //     payment.paymentOption === "none" ||
-        //     (payment.paymentOption === "online" && !payment.paymentReceipt)
-        //   );
-        // })}
-        className="mt-6 w-full"
-        size="lg"
-        variant="default"
-      >
-        Confirm Purchase
-      </Button>
     </div>
   );
 };

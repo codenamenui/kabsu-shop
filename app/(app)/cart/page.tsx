@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { CartOrder } from "@/constants/type";
+import { CartOrder, Order } from "@/constants/type";
 import { createClient } from "@/supabase/clients/createClient";
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
@@ -20,12 +20,45 @@ import { ShoppingCart, Package, AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import CartOrderConfirmation from "./GroupedCart";
 
+// Error Message Component (to be placed near the top of the file)
+const ErrorMessage = ({
+  message,
+  fields = [],
+}: {
+  message: string;
+  fields?: string[];
+}) => {
+  return (
+    <div className="flex items-center space-x-3 rounded-lg border border-red-200 bg-red-50 p-4">
+      <AlertCircle className="h-6 w-6 shrink-0 text-red-500" />
+      <div>
+        <p className="text-sm font-medium text-red-800">{message}</p>
+        {fields.length > 0 && (
+          <ul className="mt-1 list-inside list-disc text-xs text-red-600">
+            {fields.map((field, index) => (
+              <li key={index}>{field}</li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Keep all the existing interfaces and helper functions exactly the same
 interface TransactionDetails {
   mobileNumber: string | null;
   amount: string | null;
   referenceNumber: string | null;
   date: string | null;
+}
+
+// Type definition for details (if not already defined)
+interface ReceiptDetails {
+  mobileNumber?: string;
+  amount: number;
+  referenceNumber?: string;
+  date?: string;
 }
 
 function extractTransactionDetails(text: string): TransactionDetails {
@@ -58,6 +91,11 @@ const Cart = () => {
   const [openConfirmation, setOpenConfirmation] = useState<boolean>(false);
   const [errMsg, setErrMsg] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [shopPrice, setShopPrice] = useState({});
+  const [errorDetails, setErrorDetails] = useState<{
+    message: string;
+    fields?: string[];
+  }>({ message: "" });
 
   useEffect(() => {
     const getData = async () => {
@@ -88,6 +126,58 @@ const Cart = () => {
     };
     getData();
   }, []);
+
+  // Validation function
+  const validateReceipt = (details: ReceiptDetails, order: Order) => {
+    // Check for required fields
+    const requiredFields: (keyof ReceiptDetails)[] = [
+      "mobileNumber",
+      "amount",
+      "referenceNumber",
+      "date",
+    ];
+
+    const missingFields = requiredFields.filter((field) => !details[field]);
+
+    if (missingFields.length > 0) {
+      setErrorDetails({
+        message: `Missing required fields: ${missingFields.join(", ")}`,
+        fields: missingFields ?? null,
+      });
+      return {
+        isValid: false,
+        errorMessage: `Missing required fields: ${missingFields.join(", ")}`,
+      };
+    }
+
+    // Check amount against shop price
+    const minimumAmount = Number(
+      shopPrice[order.shops.id]?.replace("₱", "") || 0,
+    );
+
+    console.log(details.amount);
+    console.log(minimumAmount);
+    console.log(details.amount < minimumAmount);
+    if (details.amount < minimumAmount) {
+      setErrorDetails({
+        message: `Insufficient payment. Minimum amount is ${minimumAmount}`,
+        fields: missingFields ?? null,
+      });
+      return {
+        isValid: false,
+        errorMessage: `Insufficient payment. Minimum amount is ${minimumAmount}`,
+      };
+    }
+
+    setErrorDetails({
+      message: null,
+      fields: null,
+    });
+    return {
+      isValid: true,
+      errorMessage: null,
+    };
+  };
 
   // Keep all other handlers and functions exactly the same
   const handleCheckboxChange = (orderId: string) => {
@@ -231,15 +321,16 @@ const Cart = () => {
       data: { text },
     } = await worker.recognize(paymentReceipt);
     const details = extractTransactionDetails(text);
+    console.log(details);
+    const handleReceiptSubmission = () => {
+      const validationResult = validateReceipt(details, order);
+      7;
+      // Proceed with submission
+      return validationResult.isValid;
+    };
 
-    if (
-      !details.mobileNumber ||
-      !details.amount ||
-      !details.referenceNumber ||
-      !details.date
-    ) {
-      setErrMsg("Invalid receipt");
-      return false;
+    if (!handleReceiptSubmission()) {
+      return;
     }
 
     const insert = async () => {
@@ -464,14 +555,14 @@ const Cart = () => {
                             cart={cart}
                             selectedOrders={selectedOrders}
                             paymentUpdate={paymentUpdate}
-                            handleOrderSubmit={handleOrderSubmit}
+                            setShopPrice={setShopPrice}
                           />
                         </div>
-                        {errMsg && (
-                          <div className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-800">
-                            <AlertCircle className="h-4 w-4" />
-                            {errMsg}
-                          </div>
+                        {errorDetails.message && (
+                          <ErrorMessage
+                            message={errorDetails.message}
+                            fields={errorDetails.fields}
+                          />
                         )}
                         <Button
                           onClick={handleOrderSubmit}

@@ -17,9 +17,7 @@ export async function GET(request: Request) {
     if (codeError) {
       // Redirect to the login page with an error message
       console.error(codeError);
-      return NextResponse.redirect(
-        `kabsu-shop-4va641hr3-codenamenuis-projects.vercel.app/login`,
-      );
+      return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/login`);
     }
 
     // Fetch the authenticated user
@@ -34,11 +32,9 @@ export async function GET(request: Request) {
       throw authError;
     }
 
-    return NextResponse.redirect(`kabsu-shop-4va641hr3-codenamenuis-projects.vercel.app
+    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}
 `);
   }
   // If no code is present, redirect to login
-  return NextResponse.redirect(
-    `kabsu-shop-4va641hr3-codenamenuis-projects.vercel.app/login`,
-  );
+  return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/login`);
 }

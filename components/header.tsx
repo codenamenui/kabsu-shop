@@ -7,7 +7,7 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import Link from "next/link";
 import { signOut } from "./actions";
 import placeholder from "@/assets/placeholder.webp";
-import { Bell, ShoppingCart, User } from "lucide-react";
+import { Bell, Info, ShoppingCart, User } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -169,7 +169,7 @@ const Header = () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `kabsu-shop-4va641hr3-codenamenuis-projects.vercel.app/api/auth/callback`,
+        redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/callback`,
       },
     });
   };
@@ -193,6 +193,10 @@ const Header = () => {
 
   const redirectShop = (shop: Shop) => {
     router.push(`/shop/${shop.id}`);
+  };
+
+  const redirectAbout = () => {
+    router.push(`/FAQ`);
   };
 
   return (
@@ -240,6 +244,9 @@ const Header = () => {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+          <Button variant="ghost" onClick={redirectAbout}>
+            <Info size={16} className="" /> <p>FAQ</p>
+          </Button>
         </ul>
         <div className="flex">
           <Link href={"/notifications"}>

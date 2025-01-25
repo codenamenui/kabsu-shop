@@ -465,14 +465,6 @@ const ModifyMerch: React.FC<MerchFormProps> = ({
 
   return (
     <Card className="w-full max-w-3xl">
-      <Button
-        onClick={() => {
-          console.log(formData);
-        }}
-      >
-        {" "}
-        HELO
-      </Button>
       <form onSubmit={handleSubmit}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-2xl">

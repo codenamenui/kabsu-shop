@@ -125,19 +125,12 @@ const Footer: React.FC = () => {
       {isFAQOpen && (
         <FAQModal isOpen={isFAQOpen} onClose={() => setIsFAQOpen(false)} />
       )}
-      <footer className="flex items-center justify-between bg-emerald-900 p-5 text-sm text-zinc-200">
+      <footer className="flex items-center justify-center bg-emerald-900 p-5 text-sm text-zinc-200">
         <div className="flex items-center gap-4">
           <Link href={"/"} className="transition-colors hover:text-white">
             The Kabsu Shop
           </Link>
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsFAQOpen(true)}
-              className="flex items-center gap-1 hover:text-white"
-              title="Frequently Asked Questions"
-            >
-              <HelpCircle size={16} />
-            </button>
             <Link
               href="/FAQ"
               className="flex items-center gap-1 hover:text-white"
@@ -146,42 +139,6 @@ const Footer: React.FC = () => {
               <Info size={16} />
             </Link>
           </div>
-        </div>
-        <div className="flex items-center gap-4">
-          {/* <div className="flex gap-3">
-            <a
-              href="https://facebook.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-white"
-              title="Facebook"
-            >
-              <Facebook size={16} />
-            </a>
-          </div> */}
-          {user ? (
-            <>
-              <Link
-                href={"/profile"}
-                className="flex items-center gap-1 transition-colors hover:text-white"
-              >
-                My Account
-              </Link>
-              <button
-                onClick={handleSignOut}
-                className="rounded bg-red-700 px-3 py-1 transition-colors hover:bg-red-600"
-              >
-                Sign Out
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={handleSignIn}
-              className="rounded bg-blue-700 px-3 py-1 transition-colors hover:bg-blue-600"
-            >
-              Sign In
-            </button>
-          )}
         </div>
       </footer>
     </>

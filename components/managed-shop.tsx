@@ -1,21 +1,41 @@
-import React from "react";
-import { createServerClient } from "@/supabase/clients/createServer";
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Card, CardTitle } from "@/components/ui/card";
 import { BadgeCheck, Building2 } from "lucide-react";
 import ShopCard from "./shop-card";
 import { ManagedShop } from "@/constants/type";
 
-const ManageShops = async () => {
-  const supabase = createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+const ManageShops = () => {
+  const [managedShops, setManagedShops] = useState<
+    { shops: ManagedShop }[] | null
+  >(null);
+  const [error, setError] = useState<Error | null>(null);
+  const supabase = createClientComponentClient();
 
-  const { data: managedShops, error } = await supabase
-    .from("officers")
-    .select("shops(id, name, acronym, logo_url)")
-    .eq("user_id", user?.id)
-    .returns<{ shops: ManagedShop }[]>();
+  useEffect(() => {
+    const fetchManagedShops = async () => {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        const { data, error } = await supabase
+          .from("officers")
+          .select("shops(id, name, acronym, logo_url)")
+          .eq("user_id", user?.id)
+          .returns<{ shops: ManagedShop }[]>();
+
+        if (error) throw error;
+        setManagedShops(data);
+      } catch (err) {
+        setError(err as Error);
+      }
+    };
+
+    fetchManagedShops();
+  }, []);
 
   return (
     <div className="p-5">
@@ -36,7 +56,9 @@ const ManageShops = async () => {
           </Card>
         )}
 
-        {managedShops && managedShops.length === 0 ? (
+        {managedShops === null ? (
+          <div>Loading...</div>
+        ) : managedShops.length === 0 ? (
           <Card className="bg-gray-50 py-12">
             <div className="text-center">
               <Building2 className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
@@ -47,7 +69,7 @@ const ManageShops = async () => {
           </Card>
         ) : (
           <div className="space-y-4">
-            {managedShops?.map((s) => {
+            {managedShops.map((s) => {
               const shop = s.shops;
               return <ShopCard shop={shop} manage={true} key={shop?.id} />;
             })}

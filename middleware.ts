@@ -26,12 +26,15 @@ export async function middleware(req: NextRequest) {
   }
 
   // Allow requests to root without restriction
-  if (pathname === "/") {
+  if (pathname === "/" || pathname.startsWith("/FAQ")) {
     return NextResponse.next();
   }
 
+  // Unauthorized access (no user)
   if (error || !user) {
     url.pathname = "/";
+    url.searchParams.set("redirectReason", "unauthorized");
+    url.searchParams.set("timestamp", Date.now().toString());
     return NextResponse.redirect(url);
   }
 
@@ -46,37 +49,44 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // For all other pages, redirect to /account if there's no valid profile
+  // Incomplete profile
   if (profileError || !profile) {
     url.pathname = "/account";
+    url.searchParams.set("redirectReason", "incomplete_profile");
+    url.searchParams.set("timestamp", Date.now().toString());
     return NextResponse.redirect(url);
   }
 
+  // Merchandise not ready
   if (pathname.startsWith("/merch")) {
-    const merchId = pathname.split("/")[2]; // Extract shopId from URL
+    const merchId = pathname.split("/")[2];
     const { data: merch } = await supabase
       .from("merchandises")
       .select("ready")
       .eq("id", merchId)
       .single();
-    console.log(merch);
+
     if (!merch?.ready) {
       url.pathname = "/";
+      url.searchParams.set("redirectReason", "merch_not_ready");
+      url.searchParams.set("timestamp", Date.now().toString());
       return NextResponse.redirect(url);
     }
   }
 
-  // Check for admin pages
+  // Admin page access
   if (pathname.startsWith("/admin")) {
     if (!admin) {
       url.pathname = "/";
+      url.searchParams.set("redirectReason", "admin_access_denied");
+      url.searchParams.set("timestamp", Date.now().toString());
       return NextResponse.redirect(url);
     }
   }
 
-  // Check for manage-shop/[shopId] pages
+  // Shop management access
   if (pathname.startsWith("/manage-shop")) {
-    const shopId = pathname.split("/")[2]; // Extract shopId from URL
+    const shopId = pathname.split("/")[2];
 
     const { data: officer } = await supabase
       .from("officers")
@@ -87,6 +97,8 @@ export async function middleware(req: NextRequest) {
 
     if (!officer) {
       url.pathname = "/";
+      url.searchParams.set("redirectReason", "shop_management_denied");
+      url.searchParams.set("timestamp", Date.now().toString());
       return NextResponse.redirect(url);
     }
   }

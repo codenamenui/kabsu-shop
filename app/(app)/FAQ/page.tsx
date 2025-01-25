@@ -30,104 +30,199 @@ const FAQItem = ({
   );
 };
 
-const MerchandiseFAQs = () => {
-  const faqData = [
+const KabsuShopFAQs = () => {
+  const faqSections = [
     {
-      question: "How do I order merchandise for my student organization?",
-      answer:
-        "To place an order, follow these steps:\n1. Create an account with your official college email\n2. Select your organization from the dropdown\n3. Choose your desired items and quantities\n4. Submit for organization approval\n5. Complete payment once approved",
+      header: "General Information",
+      questions: [
+        {
+          question: "What is The Kabsu Shop?",
+          answer:
+            "The Kabsu Shop is an exclusive e-commerce platform for Cavite State University students. It allows student organizations to sell official merchandise to fellow students.",
+        },
+        {
+          question: "Who can use The Kabsu Shop?",
+          answer:
+            "Only students with a valid cvsu.edu.ph Gmail account can access and use The Kabsu Shop.",
+        },
+        {
+          question: "How does The Kabsu Shop work?",
+          answer:
+            "Student organizations post their merchandise for sale as pre-order items. Students can browse, place pre-orders, and claim their items at designated pick-up locations set by the sellers.",
+        },
+        {
+          question: "What merchandise can student organizations sell?",
+          answer:
+            "The merchandise categories are determined and added by the system admin. Common categories include hoodies, lanyards, polo shirts, tote bags, and more. Check the platform for updated categories.",
+        },
+      ],
     },
     {
-      question: "What types of merchandise can student organizations purchase?",
-      answer:
-        "We offer a wide range of merchandise including:\n• Custom t-shirts and hoodies\n• Branded water bottles\n• Tote bags\n• Event banners and posters\n• Custom printed stickers\n• Promotional giveaway items\n• Organization-specific apparel",
+      header: "Account Management",
+      questions: [
+        {
+          question: "How do I create an account?",
+          answer:
+            "You can create an account using your cvsu.edu.ph Gmail address. Simply click on 'Sign in' and verify your email address.",
+        },
+        {
+          question: "I'm having trouble logging in. What should I do?",
+          answer:
+            "Double-check that you're using your cvsu.edu.ph Gmail address. If the problem persists, try resetting your password or contact our support team.",
+        },
+        {
+          question: "Can I use my personal Gmail account?",
+          answer:
+            "No, only official cvsu.edu.ph Gmail accounts are allowed to ensure exclusivity for Cavite State University students.",
+        },
+      ],
     },
     {
-      question: "How long does merchandise production take?",
-      answer:
-        "Standard production times are:\n• Basic items (t-shirts, stickers): 5-7 business days\n• Custom printed items: 7-10 business days\n• Large bulk orders: 10-14 business days\n\nRush orders are available for an additional fee.",
+      header: "Buying Process",
+      questions: [
+        {
+          question: "What payment methods are accepted?",
+          answer:
+            "The Kabsu Shop accepts two payment methods:\n1. In-person payment at the seller's designated claiming location.\n2. GCash payment, with details provided during checkout.",
+        },
+        {
+          question:
+            "Can I get discounts as a member of a student organization?",
+          answer:
+            "Discounts may be applied to items for members of a student organization. It depends on the student organization if they offer a discounted price for their members. Check the product details or contact the seller for confirmation.",
+        },
+        {
+          question: "Are all items pre-order only?",
+          answer:
+            "Yes, all items on The Kabsu Shop are pre-order only, as the student organizations produce merchandise based on pre-orders. Make sure to check the product's estimated production and claiming timeline before placing an order.",
+        },
+        {
+          question:
+            "Can I add items from multiple student organizations to my cart?",
+          answer:
+            "Yes, you can add items from different organizations to your cart. However, you need to check out separately by student organization shop, as each organization handles its own transactions.",
+        },
+        {
+          question: "How do I claim my purchased items?",
+          answer:
+            "After completing your pre-order, you can claim your items at the seller's designated claiming location, such as the CEIT building. The claiming location and dates will be provided in the product description and during checkout.",
+        },
+        {
+          question: "Can I cancel my order?",
+          answer:
+            "Cancellation policies depend on the student organization selling the merchandise. Some items may be cancellable, while others are non-refundable. Check the cancellation policy on the seller's shop page or product description before completing your purchase.",
+        },
+        {
+          question: "What happens if I don't claim my order on time?",
+          answer:
+            "If you fail to claim your order within the time specified by the seller, your order may be canceled. Contact the seller directly to resolve any issues.",
+        },
+      ],
     },
     {
-      question: "Are there minimum order quantities?",
-      answer:
-        "Minimum order quantities vary by item:\n• T-shirts and hoodies: 12 items\n• Stickers and small items: 25 items\n• Banners and large prints: 5 items\n\nWe offer flexible options for smaller organizations.",
+      header: "Seller Guidelines",
+      questions: [
+        {
+          question: "Who can create a shop on The Kabsu Shop?",
+          answer:
+            "Only the system admin can create a shop on The Kabsu Shop. Student organization officers must apply to have their organization registered as a shop.",
+        },
+        {
+          question: "How do we apply to become a seller?",
+          answer:
+            "To apply, contact the system admin with the necessary details about your organization. Once your application is verified, the admin will register your organization as a shop on the platform.",
+        },
+        {
+          question: "What merchandise can we sell?",
+          answer:
+            "The merchandise categories available for sale depend on the system admin, who can add or adjust the allowed categories. These categories might include hoodies, lanyards, tote bags, polo shirts, and more.",
+        },
+        {
+          question: "How do we manage our shop?",
+          answer:
+            "Approved sellers can log in to the seller dashboard to:\n• View a dashboard with order and sale summaries.\n• Add merchandise and manage product details, such as photos, descriptions, and prices.\n• Manage shop profile, including shop description and contact details.\n• Add officers, if multiple sellers or claim points are involved.\n• Track orders and payments to ensure smooth transactions.",
+        },
+        {
+          question: "Can we set a policy for order cancellations?",
+          answer:
+            "Yes, sellers can decide whether their pre-order items are cancellable or non-cancellable. Ensure you clearly state your cancellation policy on your shop page and product listings.",
+        },
+      ],
     },
     {
-      question: "How can we fund our merchandise?",
-      answer: (
-        <div>
-          <p>Funding options include:</p>
-          <ul className="list-disc pl-5">
-            <li>Organization budget allocations</li>
-            <li>Fundraising event proceeds</li>
-            <li>Member contributions</li>
-            <li>Sponsorship funds</li>
-            <li>Pre-selling items to members</li>
-          </ul>
-          <p className="mt-2 text-sm italic">
-            Tip: Many organizations use merchandise sales as a fundraising tool!
-          </p>
-        </div>
-      ),
+      header: "Claiming and Pick-Up",
+      questions: [
+        {
+          question: "Where do I claim my orders?",
+          answer:
+            "Claiming locations are set by the seller and will be specified in the product description or during checkout.",
+        },
+        {
+          question: "Can someone else claim my order on my behalf?",
+          answer:
+            "This depends on the seller's policy. Some sellers may allow authorized representatives to claim orders. Be sure to confirm this with the seller.",
+        },
+        {
+          question: "What should I bring when claiming my order?",
+          answer:
+            "The requirements for claiming orders are determined by the student organizations.",
+        },
+      ],
     },
     {
-      question: "Can we customize the design of our merchandise?",
-      answer:
-        "Absolutely! We offer:\n• Full custom design services\n• Logo integration\n• Color matching\n• Multiple design revision rounds\n• Vector file compatibility\n• Mockup previews before production",
+      header: "Technical Support",
+      questions: [
+        {
+          question:
+            "What should I do if I encounter an issue with the website?",
+          answer:
+            "Report any technical problems in our email to our support team. Be sure to include screenshots and a description of the issue for faster assistance.",
+        },
+      ],
     },
     {
-      question: "What is the approval process for merchandise orders?",
-      answer: (
-        <div>
-          <p>Our approval process involves:</p>
-          <ol className="list-decimal pl-5">
-            <li>Submit initial design and order request</li>
-            <li>Organization leadership reviews</li>
-            <li>Design approval by designated administrator</li>
-            <li>Financial authorization</li>
-            <li>Production confirmation</li>
-          </ol>
-          <p className="mt-2 text-sm text-gray-600">
-            Typical approval time: 2-3 business days
-          </p>
-        </div>
-      ),
-    },
-    {
-      question: "Do you offer student discounts?",
-      answer:
-        "Yes! We provide:\n• 10% discount for first-time organization orders\n• Volume discounts for orders over 50 items\n• Seasonal promotional discounts\n• Special rates for non-profit student groups",
-    },
-    {
-      question: "How do returns and exchanges work?",
-      answer:
-        "Our return policy for student organizations:\n• Defective items: 100% refund or immediate replacement\n• Design errors: Free redesign and reprint\n• Size/color issues: Exchange within 14 days\n• Custom items: No returns unless manufacturing defect exists",
-    },
-    {
-      question: "Can individual members order merchandise?",
-      answer:
-        "Individual orders require:\n• Organization approval\n• Minimum quantity requirements\n• Payment through organization account\n• Verification of current membership status",
+      header: "Additional Information",
+      questions: [
+        {
+          question: "Are promotions or discounts offered on The Kabsu Shop?",
+          answer:
+            "Promotions and discounts are determined by individual student organizations. Check their shop pages for any updates.",
+        },
+        {
+          question: "Can I suggest new features for The Kabsu Shop?",
+          answer:
+            "Absolutely! We value student feedback. You can contact our email to share your ideas or suggestions.",
+        },
+      ],
     },
   ];
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12">
       <h1 className="mb-8 text-center text-3xl font-bold text-emerald-900">
-        Student Organization Merchandise FAQs
+        The Kabsu Shop FAQs
       </h1>
       <div className="rounded-lg bg-white p-6 shadow-md">
-        {faqData.map((faq, index) => (
-          <FAQItem key={index} question={faq.question} answer={faq.answer} />
+        {faqSections.map((section, sectionIndex) => (
+          <div key={sectionIndex} className="mb-8">
+            <h2 className="mb-4 border-b pb-2 text-xl font-bold text-emerald-800">
+              {section.header}
+            </h2>
+            {section.questions.map((faq, faqIndex) => (
+              <FAQItem
+                key={`${sectionIndex}-${faqIndex}`}
+                question={faq.question}
+                answer={faq.answer}
+              />
+            ))}
+          </div>
         ))}
       </div>
       <div className="mt-8 text-center text-sm text-gray-600">
-        <p>
-          Still have questions? Contact our support team at{" "}
-          <span className="text-emerald-700">support@campusmerch.com</span>
-        </p>
+        <p>Still have questions? Contact our support team.</p>
       </div>
     </div>
   );
 };
 
-export default MerchandiseFAQs;
+export default KabsuShopFAQs;
