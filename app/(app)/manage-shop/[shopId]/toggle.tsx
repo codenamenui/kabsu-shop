@@ -34,7 +34,7 @@ const ToggleReadyButton = ({ merchId }) => {
       if (update) console.log(update);
       setIsReady(!isReady);
     } catch (error) {
-      console.error("Error toggling ready status:", error);
+      console.log("Error toggling ready status:", error);
     } finally {
       setIsLoading(false);
     }

@@ -141,7 +141,7 @@ export default function AdminDashboard({
         const data = await fetchAdminDashboardData(parseInt(params.shopId));
         setDashboardData(data);
       } catch (error) {
-        console.error("Failed to load dashboard data:", error);
+        console.log("Failed to load dashboard data:", error);
       } finally {
         setIsLoading(false);
       }
@@ -172,7 +172,7 @@ export default function AdminDashboard({
         `sales-report-${new Date().toISOString().split("T")[0]}.csv`,
       );
     } catch (error) {
-      console.error("Failed to export orders:", error);
+      console.log("Failed to export orders:", error);
     } finally {
       setIsExporting(false);
     }

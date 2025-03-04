@@ -230,7 +230,7 @@ const Cart = () => {
     } = await supabase.auth.getUser();
 
     if (userError) {
-      console.error(userError);
+      console.log(userError);
       return false;
     }
 
@@ -258,7 +258,7 @@ const Cart = () => {
         .single();
 
       if (statusError) {
-        console.error(statusError);
+        console.log(statusError);
         return false;
       }
 
@@ -281,7 +281,7 @@ const Cart = () => {
         .single();
 
       if (error) {
-        console.error(error);
+        console.log(error);
         return false;
       }
 
@@ -350,7 +350,7 @@ const Cart = () => {
         .single();
 
       if (statusError) {
-        console.error(statusError);
+        console.log(statusError);
         return false;
       }
 
@@ -373,7 +373,7 @@ const Cart = () => {
         .single();
 
       if (error) {
-        console.error(error);
+        console.log(error);
         return false;
       }
 
@@ -384,7 +384,7 @@ const Cart = () => {
           .upload(url, paymentReceipt);
 
         if (storageError) {
-          console.error(storageError);
+          console.log(storageError);
         }
 
         const {
@@ -396,7 +396,7 @@ const Cart = () => {
           .insert([{ picture_url: publicUrl, order_id: data.id }]);
 
         if (paymentError) {
-          console.error(paymentError);
+          console.log(paymentError);
           return false;
         }
       }

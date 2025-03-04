@@ -114,7 +114,7 @@ async function processOrders(shopId: string) {
   // .eq("shop_id", shopId);
 
   if (error) {
-    console.error("Error fetching orders:", error);
+    console.log("Error fetching orders:", error);
     return null;
   }
 

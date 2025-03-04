@@ -147,7 +147,7 @@ const ShopProfilePage = ({
       toast.success("Shop profile updated successfully!");
     } catch (error) {
       toast.error("Failed to update shop profile");
-      console.error(error);
+      console.log(error);
     } finally {
       setIsSubmitting(false);
     }

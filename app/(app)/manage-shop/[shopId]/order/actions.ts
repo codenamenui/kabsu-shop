@@ -43,6 +43,6 @@ export const handleOrderAction = async (
     .eq("id", order.order_statuses.id);
 
   if (error) {
-    console.error("Error updating order:", error);
+    console.log("Error updating order:", error);
   }
 };

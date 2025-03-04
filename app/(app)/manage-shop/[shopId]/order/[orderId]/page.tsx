@@ -166,7 +166,7 @@ const EditOrder = ({
       toast.success("Order updated successfully");
       router.refresh();
     } catch (error) {
-      console.error("Error updating order:", error);
+      console.log("Error updating order:", error);
       toast.error("Failed to update order");
     } finally {
       setIsSubmitting(false);

@@ -79,7 +79,7 @@ const OrderInfo = ({
         .select();
 
       if (databaseError) {
-        console.error(databaseError);
+        console.log(databaseError);
         return;
       }
     };

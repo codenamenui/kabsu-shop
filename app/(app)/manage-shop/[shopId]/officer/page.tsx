@@ -109,7 +109,7 @@ const Officers = ({ params }: { params: { shopId: string } }) => {
         ).length,
       });
     } catch (error) {
-      console.error("Error:", error);
+      console.log("Error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -266,7 +266,7 @@ const AddOfficerDialog = ({ shopId, onSuccess }) => {
       if (error) throw error;
       setSearchResults(data ?? []);
     } catch (error) {
-      console.error("Search error:", error);
+      console.log("Search error:", error);
     }
   };
 

@@ -98,7 +98,7 @@ const Footer: React.FC = () => {
       await signOut();
       router.push("/");
     } catch (error) {
-      console.error("Sign out error:", error);
+      console.log("Sign out error:", error);
     }
   };
 
@@ -113,10 +113,10 @@ const Footer: React.FC = () => {
       });
 
       if (error) {
-        console.error("Sign in error:", error);
+        console.log("Sign in error:", error);
       }
     } catch (error) {
-      console.error("Sign in error:", error);
+      console.log("Sign in error:", error);
     }
   };
 

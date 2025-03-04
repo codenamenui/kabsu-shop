@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     // Handle error in OAuth exchange
     if (codeError) {
       // Redirect to the login page with an error message
-      console.error(codeError);
+      console.log(codeError);
       return NextResponse.redirect(`${process.env.NEXT_PUBLIC_BASE_URL}/login`);
     }
 
@@ -28,7 +28,7 @@ export async function GET(request: Request) {
     } = await supabase.auth.getUser();
 
     if (authError) {
-      console.error(authError.message);
+      console.log(authError.message);
       throw authError;
     }
 

@@ -19,7 +19,7 @@ type Category = {
   picture_url: string;
 };
 
-const Categories = () => {
+const  Categories = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const router = useRouter();
 

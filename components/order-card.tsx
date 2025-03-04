@@ -64,7 +64,7 @@ const OrderCard = ({ order }: { order: Order }) => {
       setIsAlertOpen(false);
       window.location.reload();
     } catch (error) {
-      console.error("Error cancelling order:", error);
+      console.log("Error cancelling order:", error);
       alert("Failed to cancel order. Please try again.");
     } finally {
       setIsSubmitting(false);

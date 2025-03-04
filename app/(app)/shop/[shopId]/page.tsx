@@ -101,7 +101,7 @@ const SearchPage = () => {
         setCategories(categoryData.data ?? []);
         setShop(shopData.data);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.log("Error fetching data:", error);
       } finally {
         setIsLoading(false);
       }

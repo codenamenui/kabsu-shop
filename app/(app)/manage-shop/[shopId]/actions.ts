@@ -9,7 +9,7 @@ export async function deleteMerch(formData: FormData) {
   const supabase = createServerComponentClient({ cookies });
   const { error } = await supabase.from("merchandises").delete().eq("id", id);
   if (error) {
-    console.error(error);
+    console.log(error);
   }
   revalidatePath("");
 }

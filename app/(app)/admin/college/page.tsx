@@ -78,7 +78,7 @@ const AddCollegePage: React.FC = () => {
       toast.success("College added successfully!");
       router.push("/admin"); // Redirect to colleges list
     } catch (error: any) {
-      console.error("Error adding college:", error);
+      console.log("Error adding college:", error);
       toast.error(error.message || "Failed to add college");
     } finally {
       setIsLoading(false);

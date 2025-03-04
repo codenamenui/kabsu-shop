@@ -114,7 +114,7 @@ const SearchPage = () => {
           .select("id, acronym");
         setShops(shops ?? []);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.log("Error fetching data:", error);
       } finally {
         setIsLoading(false);
       }

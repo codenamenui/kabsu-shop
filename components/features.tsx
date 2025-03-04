@@ -44,7 +44,7 @@ const FeaturedProducts = () => {
       );
 
       if (error) {
-        console.error("Error fetching merchandise:", error);
+        console.log("Error fetching merchandise:", error);
         return;
       }
 
@@ -54,7 +54,7 @@ const FeaturedProducts = () => {
         .select("merch_id");
 
       if (ordersError) {
-        console.error("Error fetching orders:", ordersError);
+        console.log("Error fetching orders:", ordersError);
         return;
       }
 
@@ -98,7 +98,7 @@ const FeaturedProducts = () => {
       if (featuredData) setFeaturedItems(featuredData as Merch[]);
 
       if (error) {
-        console.error("Error fetching popular items:", error);
+        console.log("Error fetching popular items:", error);
       }
     };
 

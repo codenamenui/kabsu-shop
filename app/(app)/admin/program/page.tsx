@@ -121,7 +121,7 @@ const AddProgramPage: React.FC = () => {
       toast.success("Program added successfully!");
       router.push("/admin"); // Redirect to programs list
     } catch (error: any) {
-      console.error("Error adding program:", error);
+      console.log("Error adding program:", error);
       toast.error(error.message || "Failed to add program");
     } finally {
       setIsLoading(false);

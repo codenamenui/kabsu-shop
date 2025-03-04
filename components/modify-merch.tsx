@@ -342,7 +342,7 @@ const ModifyMerch: React.FC<MerchFormProps> = ({
       router.push(`/manage-shop/${shopId}`);
       router.refresh();
     } catch (error) {
-      console.error("Error in merchandise submission:", error);
+      console.log("Error in merchandise submission:", error);
       toast.error("Failed to save merchandise");
     } finally {
       setIsSubmitting(false);
@@ -391,7 +391,7 @@ const ModifyMerch: React.FC<MerchFormProps> = ({
           .delete()
           .eq("picture_url", pictureToDelete.picture_url);
       } catch (deleteError) {
-        console.error("Error deleting picture:", deleteError);
+        console.log("Error deleting picture:", deleteError);
       }
     }
 
@@ -433,7 +433,7 @@ const ModifyMerch: React.FC<MerchFormProps> = ({
         // Revoke blob URL
         URL.revokeObjectURL(newPic.picture_url);
       } catch (error) {
-        console.error("Error uploading image:", error);
+        console.log("Error uploading image:", error);
       }
     }
   };

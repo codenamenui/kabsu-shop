@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import Link from "next/link";
-import placeholder from "@/assets/placeholder.webp";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Carousel,

@@ -85,7 +85,7 @@ const Membership = ({ params }: { params: { shopId: string } }) => {
         pending: emails.length - (profiles?.length ?? 0),
       });
     } catch (error) {
-      console.error("Error:", error);
+      console.log("Error:", error);
     } finally {
       setIsLoading(false);
     }

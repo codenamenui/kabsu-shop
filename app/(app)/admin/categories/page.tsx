@@ -117,7 +117,7 @@ const AddCategoryPage: React.FC = () => {
       toast.success("Category added successfully!");
       router.push("/admin");
     } catch (error: any) {
-      console.error("Error adding category:", error);
+      console.log("Error adding category:", error);
       toast.error(error.message || "Failed to add category");
     } finally {
       setIsLoading(false);

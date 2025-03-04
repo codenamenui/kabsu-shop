@@ -17,7 +17,7 @@ const OrderCountDisplay = ({ merchId }) => {
           .eq("merch_id", merchId);
         setOrderCount(data?.length ?? 0);
       } catch (error) {
-        console.error("Error fetching order count:", error);
+        console.log("Error fetching order count:", error);
       } finally {
         setIsLoading(false);
       }

@@ -135,7 +135,7 @@ const AddShopPage: React.FC = () => {
       if (error) throw error;
       setSearchResults(data ?? []);
     } catch (error) {
-      console.error("Search error:", error);
+      console.log("Search error:", error);
     }
   };
 
@@ -241,7 +241,7 @@ const AddShopPage: React.FC = () => {
       toast.success("Shop added successfully!");
       router.push("/admin"); // Redirect to shops list
     } catch (error: any) {
-      console.error("Error adding shop:", error);
+      console.log("Error adding shop:", error);
       toast.error(error.message || "Failed to add shop");
     } finally {
       setIsLoading(false);

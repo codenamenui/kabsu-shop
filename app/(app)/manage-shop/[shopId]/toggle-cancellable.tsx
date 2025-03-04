@@ -19,7 +19,7 @@ const ToggleCancellableButton = ({ merchId }) => {
         .single();
 
       if (error) {
-        console.error("Error fetching cancellable status:", error);
+        console.log("Error fetching cancellable status:", error);
         return;
       }
 
@@ -39,13 +39,13 @@ const ToggleCancellableButton = ({ merchId }) => {
         .select();
 
       if (error) {
-        console.error("Error updating cancellable status:", error);
+        console.log("Error updating cancellable status:", error);
         return;
       }
 
       setIsCancellable(!isCancellable);
     } catch (error) {
-      console.error("Error toggling cancellable status:", error);
+      console.log("Error toggling cancellable status:", error);
     } finally {
       setIsLoading(false);
     }

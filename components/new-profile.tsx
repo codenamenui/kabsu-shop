@@ -144,7 +144,7 @@ const NewProfile = () => {
 
       toast.success("Profile saved successfully!");
     } catch (error) {
-      console.error("Error saving profile:", error);
+      console.log("Error saving profile:", error);
       toast.error("Failed to save profile. Please try again.");
     } finally {
       setIsLoading(false);

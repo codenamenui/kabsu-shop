@@ -85,7 +85,7 @@ const OrderActions = ({
       .eq("id", order.order_statuses.id);
 
     if (statusError) {
-      console.error("Error updating order status:", statusError);
+      console.log("Error updating order status:", statusError);
       return;
     }
 
@@ -106,7 +106,7 @@ const OrderActions = ({
       ]);
 
     if (customerNotificationError) {
-      console.error(
+      console.log(
         "Error creating customer notification:",
         customerNotificationError,
       );
@@ -134,7 +134,7 @@ const OrderActions = ({
       ]);
 
     if (adminNotificationError) {
-      console.error(
+      console.log(
         "Error creating admin notification:",
         adminNotificationError,
       );

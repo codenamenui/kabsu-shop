@@ -89,7 +89,7 @@ const FullMerchDisplay = ({
       } = await supabase.auth.getUser();
 
       if (userError) {
-        console.error(userError);
+        console.log(userError);
         return;
       }
 
@@ -104,7 +104,7 @@ const FullMerchDisplay = ({
       ]);
 
       if (error) {
-        console.error(error);
+        console.log(error);
         return;
       }
     };
@@ -119,7 +119,7 @@ const FullMerchDisplay = ({
     } = await supabase.auth.getUser();
 
     if (userError) {
-      console.error(userError);
+      console.log(userError);
       return false;
     }
 
@@ -147,7 +147,7 @@ const FullMerchDisplay = ({
         .single();
 
       if (statusError) {
-        console.error(statusError);
+        console.log(statusError);
         return false;
       }
 
@@ -170,7 +170,7 @@ const FullMerchDisplay = ({
         .single();
 
       if (error) {
-        console.error(error);
+        console.log(error);
         return false;
       }
       setOpenConfirmation(false);
@@ -229,7 +229,7 @@ const FullMerchDisplay = ({
         .single();
 
       if (statusError) {
-        console.error(statusError);
+        console.log(statusError);
         return false;
       }
 
@@ -252,7 +252,7 @@ const FullMerchDisplay = ({
         .single();
 
       if (error) {
-        console.error(error);
+        console.log(error);
         return false;
       }
 
@@ -263,7 +263,7 @@ const FullMerchDisplay = ({
           .upload(url, paymentReceipt);
 
         if (storageError) {
-          console.error(storageError);
+          console.log(storageError);
         }
 
         const {
@@ -275,7 +275,7 @@ const FullMerchDisplay = ({
           .insert([{ picture_url: publicUrl, order_id: data.id }]);
 
         if (paymentError) {
-          console.error(paymentError);
+          console.log(paymentError);
           return false;
         }
       }

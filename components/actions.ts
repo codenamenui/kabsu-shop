@@ -8,7 +8,7 @@ export async function signOut() {
         const supabase = createServerComponentClient({ cookies });
         const { error } = await supabase.auth.signOut();
         if (error) {
-            console.error();
+            console.log();
         }
         return error;
     };
